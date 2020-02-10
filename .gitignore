@@ -1,0 +1,7 @@
+#dir
+.idea/
+public/*
+vendor/*
+
+#files
+composer.phar

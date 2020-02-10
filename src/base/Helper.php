@@ -1,0 +1,112 @@
+<?php
+
+namespace MagicFlatsFinder\base;
+
+use MagicFlatsFinder\App;
+
+class Helper extends BaseObject
+{
+    public $plans_map;
+    private $def_format = 'png';
+
+
+    public function init()
+    {
+        $this->createPlansMap( $this->config['project'] );
+        //echo "<pre>".print_r( $this->plans_map[ $this->config['project'] ]->{$this->def_format}  ,true )."</pre>";
+    }
+
+
+    public function simpleFlatStatus( $status, $type = 'free' )
+    {
+        switch ( $type ){
+            case 'free':
+                return (is_null($status) ? true : ( !$status || $status === '0'  ? true : false ) );
+        }
+    }
+
+
+    protected function createPlansMap( $project )
+    {
+        $this->plans_map[ $project ] = file_get_contents( $this->config['map'].'/map/?obj='.$project );
+        if( $this->isJson( $this->plans_map[ $project ] ) )
+        {
+            $this->plans_map[ $project ] = json_decode( $this->plans_map[ $project ] );
+        }
+    }
+
+
+    protected function isJson( $string )
+    {
+        json_decode($string);
+        return (json_last_error() == JSON_ERROR_NONE);
+    }
+
+
+    public function getFlatPlan( $guid, $house_id, $project=false, $format = false )
+    {
+        if( !isset($guid) || !isset($house_id) ) {
+            return false;
+        }
+
+        $format = !$format ? $this->def_format : $format;
+        $project = !$project ? $this->config['project'] : $project;
+
+
+        $format = $project === App::PROJECT_DOMBOR ? 'jpg' : $format;
+
+        return $this->checkFlatPlan( $guid, $house_id, $project, $format ) ? $this->plans_map[ $project ]->{ $format }->{ $house_id }->{ $guid } : false;
+    }
+
+
+    public function checkFlatPlan( $guid, $house_id, $project=false, $format = false )
+    {
+        if( !isset($guid) ) {
+            return false;
+        }
+
+        $format = !$format ? $this->def_format : $format;
+
+        if( !isset( $this->plans_map[ $project ] ) ) {
+            return false;
+        }
+
+        if( !isset( $this->plans_map[ $project ]->{ $format } ) ) {
+            return false;
+        }
+
+        if( !isset( $this->plans_map[ $project ]->{ $format }->{ $house_id } ) ) {
+            return false;
+        }
+
+        return isset( $this->plans_map[ $project ]->{ $format }->{ $house_id }->{ $guid } );
+    }
+
+
+    public function checkFormat( $project, $format )
+    {
+        return (isset( $this->plans_map[ $project ] ) && isset( $this->plans_map[ $project ]->{ $format } ));
+    }
+
+
+    public function getListPlans( $project, $format )
+    {
+        return isset( $this->plans_map[ $project ] ) && isset( $this->plans_map[ $project ]->{ $format } ) ? $this->plans_map[ $project ]->{ $format } : false;
+    }
+
+
+    public function getListFormats( $project )
+    {
+        if( !isset( $this->plans_map[ $project ] ) )
+            return false;
+
+        $arFormat = [];
+
+        foreach ( (array) $this->plans_map[ $project ] as $format => $arr )
+            $arFormat[] = $format;
+
+        return $arFormat;
+    }
+
+}
+

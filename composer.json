@@ -1,0 +1,22 @@
+{
+    "name": "orbit_exp/magic_flats_finder",
+    "type": "library",
+    "require": {
+        "php": ">=5.6"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alex Kruglov",
+            "email": "A.Kruglov@kortros.ru"
+        }
+    ],
+
+    "minimum-stability": "stable",
+
+    "autoload": {
+        "psr-4": {
+            "MagicFlatsFinder\\": "src"
+        }
+    }
+}
