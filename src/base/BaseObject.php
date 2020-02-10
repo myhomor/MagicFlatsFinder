@@ -8,21 +8,10 @@ class BaseObject
 
     public function __construct($config = [])
     {
-        /*if ( empty($config) )
-            $this->config = self::configure($this, $config);
-        else
-            $this->config  = $config;*/
-
         $this->config  = $config;
 
         $this->init();
     }
-
-    /*public function configure()
-    {
-        if( file_exists( __DIR__.'/../config.php' ) )
-            return include ( __DIR__.'/../config.php' );
-    }*/
 
     /**
      * Инициализация объекта после конструктора

@@ -23,9 +23,6 @@ class Parser
     {
         if( !$xml_obj )
         {
-            /*$xml = file_get_contents( $params['xml_url'] );
-            $xml = simplexml_load_string($xml);
-            */
 
             $curl_handle=curl_init();
             curl_setopt($curl_handle, CURLOPT_URL, $params['xml_url'] );
@@ -72,6 +69,5 @@ class Parser
     {
         return $controller.'_'.$project;
     }*/
-
 
 }
