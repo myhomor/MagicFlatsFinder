@@ -28,31 +28,30 @@ class App extends base\BaseObject
 
     public function init()
     {
-        if( isset($this->config['xml_type']) )
+        if (isset($this->config['xml_type']))
             $this->xml_type = $this->config['xml_type'];
 
-        $this->helper = new base\Helper( [
+        $this->helper = new base\Helper([
             'project' => $this->config['project'],
             'map' => 'http://feeds.dev.kortros.ru'
-        ] );
+        ]);
     }
 
-    public function find( $house_id, $params )
+    public function find($house_id, $params)
     {
-        if( $this->config['project'] === self::PROJECT_HEADLINER && $this->xml_type !== self::DEF_XML_TYPE )
-            $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl( $this->config['xml'] ) );
+        if ($this->config['project'] === self::PROJECT_HEADLINER && $this->xml_type !== self::DEF_XML_TYPE)
+            $xml = new base\SimpleXmlExtended(base\Parser::getXmlByUrl($this->config['xml']));
         else
-            $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl( $this->config['xml'].'?BuildingID='.$house_id.'&deep='.$this->deep ) );
+            $xml = new base\SimpleXmlExtended(base\Parser::getXmlByUrl($this->config['xml'] . '?BuildingID=' . $house_id . '&deep=' . $this->deep));
 
 
-        return $this->_find( $house_id, $params, $xml );
+        return $this->_find($house_id, $params, $xml);
     }
 
-    protected function _find( $house_id, $params, $xml )
+    protected function _find($house_id, $params, $xml)
     {
-        foreach ( $xml->developers->developer->projects->project->buildings->building as $building )
-        {
-            if( (int) $building->id !== $house_id ) continue;
+        foreach ($xml->developers->developer->projects->project->buildings->building as $building) {
+            if ((int)$building->id !== $house_id) continue;
 
             $_building = (array)$building;
             $_apartments = (array)$building->apartments;
@@ -70,25 +69,25 @@ class App extends base\BaseObject
                 'mountingBeginning' => $_building['mountingBeginning'],
 
                 'countFree' => $_apartments['countAll'],
-                'count' => [    1 => $_apartments['count1'],
-                                2 => $_apartments['count2'],
-                                3 => $_apartments['count3'],
-                                4 => $_apartments['count4'],
-                                5 => $_apartments['count5'],
+                'count' => [1 => $_apartments['count1'],
+                    2 => $_apartments['count2'],
+                    3 => $_apartments['count3'],
+                    4 => $_apartments['count4'],
+                    5 => $_apartments['count5'],
                 ],
 
-                'quantity' => [ 1 => $_apartments['quantity1'],
-                                2 => $_apartments['quantity2'],
-                                3 => $_apartments['quantity3'],
-                                4 => $_apartments['quantity4'],
-                                5 => $_apartments['quantity5'],
+                'quantity' => [1 => $_apartments['quantity1'],
+                    2 => $_apartments['quantity2'],
+                    3 => $_apartments['quantity3'],
+                    4 => $_apartments['quantity4'],
+                    5 => $_apartments['quantity5'],
                 ],
 
                 'flatsCost' => [1 => $_apartments['price1'],
-                                2 => $_apartments['price2'],
-                                3 => $_apartments['price3'],
-                                4 => $_apartments['price4'],
-                                5 => $_apartments['price5'],
+                    2 => $_apartments['price2'],
+                    3 => $_apartments['price3'],
+                    4 => $_apartments['price4'],
+                    5 => $_apartments['price5'],
                 ],
 
                 'countTotal' => $_apartments['countTotal'],
@@ -98,9 +97,8 @@ class App extends base\BaseObject
             foreach ($building->apartments->apartment as $apartment) {
                 $_apartment = (array)$apartment;
 
-                if ( isset( $params['active']) && $params['active'] === true )
-                {
-                    if ( !$this->helper->simpleFlatStatus( $_apartment['status'], 'free') )
+                if (isset($params['active']) && $params['active'] === true) {
+                    if (!$this->helper->simpleFlatStatus($_apartment['status'], 'free'))
                         continue;
                 }
 
@@ -132,7 +130,7 @@ class App extends base\BaseObject
 
                     $_apartment['queue'] = $params['queue'] ? $params['queue'] : $this->queue;
 
-                    $_apartment['buildNumber'] = ( isset( $params['build']['number'] )
+                    $_apartment['buildNumber'] = (isset($params['build']['number'])
                         ? $params['build']['number']
                         : (preg_replace("/[^0-9]/", '', (string)$building->buildNumber)));
 
@@ -140,7 +138,7 @@ class App extends base\BaseObject
                     $arApartment = [
                         'queue' => $_apartment['queue'],
                         'guid' => $_apartment['guid'],
-                        'building_id' => (int) $building->id,
+                        'building_id' => (int)$building->id,
                         'section_number' => $_apartment['section'],
                         'floor_number' => $_apartment['floor'],
                         'number' => $_apartment['numOrder'],
@@ -148,13 +146,13 @@ class App extends base\BaseObject
                         'room_count' => $_apartment['rooms'],
                         'total_cost' => str_replace(',', '.', $_apartment['cost']),
                         'cost_per_meter' => $_apartment['squareMetrPrice'],
-                        'status' => ( $this->helper->simpleFlatStatus( $_apartment['status'], 'free' ) ? 1 : 0 ),
+                        'status' => ($this->helper->simpleFlatStatus($_apartment['status'], 'free') ? 1 : 0),
                         'crm_status' => $_apartment['status'],
 
-                        'plan' => $this->helper->getFlatPlan(   $_apartment['guid'],
-                                                                (int) $building->id,
-                                                                $this->config['project'],
-                                                                ( isset( $params['plans']['format'] ) ? $params['plans']['format'] : false ) ),
+                        'plan' => $this->helper->getFlatPlan($_apartment['guid'],
+                            (int)$building->id,
+                            $this->config['project'],
+                            (isset($params['plans']['format']) ? $params['plans']['format'] : false)),
 
                         'pl' => $_apartment['numInPlatform'],
                         'is_apartament' => $params['build']['is_apartament'] === true ? 'Y' : 'N',
@@ -186,19 +184,19 @@ class App extends base\BaseObject
                         }
                     }
 
-                    $res['flats'][ $_apartment['guid'] ] = $arApartment;
+                    $res['flats'][$_apartment['guid']] = $arApartment;
                 }
             }
         }
-        if( !isset( $params['select'] ) )
+        if (!isset($params['select']))
             return $res;
 
-        foreach ( $params['select'] as $type)
-        {
-            if( isset( $res[ $type ] ) ) {
+        foreach ($params['select'] as $type) {
+            if (isset($res[$type])) {
                 $arRes[$type] = $res[$type];
             }
         }
 
-        return count($params['select']) == 1 ? $arRes[ $type ] : $arRes;
+        return count($params['select']) == 1 ? $arRes[$type] : $arRes;
     }
+}
