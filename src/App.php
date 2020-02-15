@@ -3,8 +3,13 @@ namespace MagicFlatsFinder;
 
 use MagicFlatsFinder\base as base;
 
+/**
+ * Class App
+ * @package MagicFlatsFinder
+ */
 class App extends base\BaseObject
 {
+
     const PROJECT_DOMUSKVERA = 'domskver';
     const PROJECT_DOMBOR = 'dombor';
     const PROJECT_DOM128 = 'dom128';
@@ -21,13 +26,18 @@ class App extends base\BaseObject
     public $deep = 4;
     public $queue = 1;
 
+
     protected $helper;
     protected $xml_type = self::DEF_XML_TYPE;
-
-    //public $project;
+    protected $filter;
+    protected $discount;
+    protected $fields;
+    protected $debug = false;
 
     public function init()
     {
+        $this->debug = $this->config['debug'] ? $this->config['debug'] : false;
+
         if (isset($this->config['xml_type']))
             $this->xml_type = $this->config['xml_type'];
 
@@ -35,8 +45,21 @@ class App extends base\BaseObject
             'project' => $this->config['project'],
             'map' => 'http://feeds.dev.kortros.ru'
         ]);
+
+        $this->filter = new base\Filter();
+        $this->fields = new base\Fields( ( isset($this->config['fields_tmp']) ? $this->config['fields_tmp'] : [] ) );
+
+        echo "<pre>".print_r($this->discount->debug,true   )."</pre>";
     }
 
+    /**
+     * @param $house_id integer id строения из crm
+     * @param $params array массив с параметрами фильтрации
+     * @return mixed array
+     *
+     * Единая точка входа в приложение.
+     * На вход подается id строения и массив параметров для фильтрации
+     */
     public function find($house_id, $params)
     {
         if ($this->config['project'] === self::PROJECT_HEADLINER && $this->xml_type !== self::DEF_XML_TYPE)
@@ -44,151 +67,128 @@ class App extends base\BaseObject
         else
             $xml = new base\SimpleXmlExtended(base\Parser::getXmlByUrl($this->config['xml'] . '?BuildingID=' . $house_id . '&deep=' . $this->deep));
 
-
         return $this->_find($house_id, $params, $xml);
     }
 
+    /**
+     * @param $house_id
+     * @param $params
+     * @param $xml
+     * @return mixed
+     * Метод поиска квартир по фиду
+     */
     protected function _find($house_id, $params, $xml)
     {
+        $this->discount = new base\Discount( $params['discount'] );
+
         foreach ($xml->developers->developer->projects->project->buildings->building as $building) {
             if ((int)$building->id !== $house_id) continue;
 
             $_building = (array)$building;
             $_apartments = (array)$building->apartments;
 
+            $arNames = $this->fields->building;
 
             $res['building'] = [
-                'price' => ['max' => $_building['maxPrice'], 'min' => $_building['minPrice']],
-                'id' => $_building['id'],
-                'name' => $_building['name'],
-                'address' => $_building['adressBuild'],
-                'status' => $_building['status'],
-                'sectionCount' => $_building['sectionCount'],
-                'floorsCount' => $_building['floorsCount'],
-                'deliveryPeriod' => $_building['deliveryPeriod'],
-                'mountingBeginning' => $_building['mountingBeginning'],
+                $arNames['price'] => ['max' => $_building['maxPrice'], 'min' => $_building['minPrice']],
+                $arNames['id'] => $_building['id'],
+                $arNames['name'] => $_building['name'],
+                $arNames['adressBuild'] => $_building['adressBuild'],
+                $arNames['status'] => $_building['status'],
+                $arNames['sectionCount'] => $_building['sectionCount'],
+                $arNames['floorsCount'] => $_building['floorsCount'],
+                $arNames['deliveryPeriod'] => $_building['deliveryPeriod'],
+                $arNames['mountingBeginning'] => $_building['mountingBeginning'],
 
-                'countFree' => $_apartments['countAll'],
-                'count' => [1 => $_apartments['count1'],
+                $arNames['countAll'] => $_apartments['countAll'],
+                $arNames['count_'] => [1 => $_apartments['count1'],
                     2 => $_apartments['count2'],
                     3 => $_apartments['count3'],
                     4 => $_apartments['count4'],
                     5 => $_apartments['count5'],
                 ],
 
-                'quantity' => [1 => $_apartments['quantity1'],
+                $arNames['quantity_'] => [1 => $_apartments['quantity1'],
                     2 => $_apartments['quantity2'],
                     3 => $_apartments['quantity3'],
                     4 => $_apartments['quantity4'],
                     5 => $_apartments['quantity5'],
                 ],
 
-                'flatsCost' => [1 => $_apartments['price1'],
+                $arNames['price_'] => [1 => $_apartments['price1'],
                     2 => $_apartments['price2'],
                     3 => $_apartments['price3'],
                     4 => $_apartments['price4'],
                     5 => $_apartments['price5'],
                 ],
 
-                'countTotal' => $_apartments['countTotal'],
+                $arNames['countTotal'] => $_apartments['countTotal'],
             ];
 
 
             foreach ($building->apartments->apartment as $apartment) {
-                $_apartment = (array)$apartment;
+                $_apartment = (array) $apartment;
 
                 if (isset($params['active']) && $params['active'] === true) {
                     if (!$this->helper->simpleFlatStatus($_apartment['status'], 'free'))
                         continue;
                 }
 
-                # придумать составной ключ keyType
-                $filter_error = false;
-                if (isset($params['flats'])) {
-                    if ($params['flats']['keyType'] === 'mixed' && count($params['flats']['list'])) {
-                        $b_id = (int)$building->id;
-                        if (!in_array(($b_id . '_' . $_apartment['section'] . '_' . $_apartment['floor'] . '_' . $_apartment['numOrder']), $params['flats']['list']))
-                            $filter_error = true;
-                    }
 
-                    if ($params['flats']['keyType'] === 'if' && isset($params['flats']['filter'])) {
-                        foreach ($params['flats']['filter'] as $key => $val):
+                $_apartment['queue'] = $params['queue'] ? $params['queue'] : $this->queue;
 
-                            if (isset($_apartment[$key])) {
-                                foreach ($val as $__key => $__val) {
-                                    if ($__key === '>' && (int)$_apartment[$key] < (int)$__val) $filter_error = true;
-                                    if ($__key === '<' && (int)$_apartment[$key] > (int)$__val) $filter_error = true;
-                                    if ($__key === '=' && (int)$_apartment[$key] !== (int)$__val) $filter_error = true;
-                                }
-                            }
-
-                        endforeach;
-                    }
-                }
-
-                if (!$filter_error) {
-
-                    $_apartment['queue'] = $params['queue'] ? $params['queue'] : $this->queue;
-
-                    $_apartment['buildNumber'] = (isset($params['build']['number'])
+                $_apartment['buildNumber'] = (isset($params['build']['number'])
                         ? $params['build']['number']
                         : (preg_replace("/[^0-9]/", '', (string)$building->buildNumber)));
 
 
-                    $arApartment = [
-                        'queue' => $_apartment['queue'],
-                        'guid' => $_apartment['guid'],
-                        'building_id' => (int)$building->id,
-                        'section_number' => $_apartment['section'],
-                        'floor_number' => $_apartment['floor'],
-                        'number' => $_apartment['numOrder'],
-                        'square' => $_apartment['squareCommon'],
-                        'room_count' => $_apartment['rooms'],
-                        'total_cost' => str_replace(',', '.', $_apartment['cost']),
-                        'cost_per_meter' => $_apartment['squareMetrPrice'],
-                        'status' => ($this->helper->simpleFlatStatus($_apartment['status'], 'free') ? 1 : 0),
-                        'crm_status' => $_apartment['status'],
+                $plan = $this->helper->getFlatPlan( $_apartment['guid'],
+                                                    (int)$building->id,
+                                                    $this->config['project'],
+                                                    (isset($params['plans']['format']) ? $params['plans']['format'] : false));
+                $arNames = $this->fields->apartment;
+                $arApartment = [
+                    $arNames['id'] => $_apartment['id'],
+                    $arNames['queue'] => $_apartment['queue'],
+                    $arNames['guid'] => $_apartment['guid'],
+                    $arNames['building_id'] => (int)$building->id,
+                    $arNames['section'] => $_apartment['section'],
+                    $arNames['floor'] => $_apartment['floor'],
+                    $arNames['numOrder'] => $_apartment['numOrder'],
+                    $arNames['squareCommon'] => $_apartment['squareCommon'],
+                    $arNames['rooms'] => $_apartment['rooms'],
+                    $arNames['cost'] => str_replace(',', '.', $_apartment['cost']),
+                    $arNames['squareMetrPrice'] => $_apartment['squareMetrPrice'],
+                    $arNames['status'] => ($this->helper->simpleFlatStatus($_apartment['status'], 'free') ? 1 : 0),
+                    $arNames['crm_status'] => $_apartment['status'],
+                    $arNames['plan'] => $plan,
+                    $arNames['numInPlatform'] => $_apartment['numInPlatform'],
+                    $arNames['is_apartament'] => $params['build']['is_apartament'] === true ? 'Y' : 'N',
+                    $arNames['buildNumber'] => $_apartment['buildNumber'],
+                    $arNames['typeFinish'] => $_apartment['typeFinish'],
+                ];
 
-                        'plan' => $this->helper->getFlatPlan($_apartment['guid'],
-                            (int)$building->id,
-                            $this->config['project'],
-                            (isset($params['plans']['format']) ? $params['plans']['format'] : false)),
+                if( isset( $params['discount'] ) ) {
+                    if( !key_exists( base\Discount::PARAM_TOTAL_COST, $arApartment ) )
+                        $arApartment[ base\Discount::PARAM_TOTAL_COST ] = $arApartment[ $arNames['cost'] ];
 
-                        'pl' => $_apartment['numInPlatform'],
-                        'is_apartament' => $params['build']['is_apartament'] === true ? 'Y' : 'N',
-                        'buildNumber' => $_apartment['buildNumber'],
-                        "type_finish" => $_apartment['typeFinish'],
-                    ];
+                    if( $discount = $this->discount->setDiscount( $arApartment ) )
+                        $arApartment['discount'] = $discount;
+                }
 
-                    if (isset($params['discount'])) {
-                        if (isset($params['discount']['all'])) {
-                            $arApartment['old_total_cost'] = $arApartment['total_cost'];
-                            $total_cost = (int)$arApartment['total_cost'];
-                            $arApartment['total_cost'] = $total_cost - (($total_cost / 100) * ( int )$params['discount']['all']);
-                            $arApartment['discount'] = ( int )$params['discount']['all'];
+                if( ( isset( $params['filter'] ) && count( $params['filter'] ) && $this->filter->check( 'flat', $arApartment, $params['filter'] ) ) ){
 
-                            $arApartment['discount_cost'] = ($total_cost / 100) * ( int )$params['discount']['all'];
-
-                        } elseif (count($params['discount']['list'])) {
-                            if ($params['discount']['keyType'] === 'mixed') {
-                                $b_id = (int)$building->id;
-                                if (array_key_exists($b_id . '_' . $_apartment['section'] . '_' . $_apartment['floor'] . '_' . $_apartment['numOrder'], $params['discount']['list'])) {
-                                    $arApartment['old_total_cost'] = $arApartment['total_cost'];
-                                    $total_cost = (int)$arApartment['total_cost'];
-                                    $arApartment['total_cost'] = $total_cost - (($total_cost / 100) * ( int )$params['discount']['list'][$b_id . '_' . $_apartment['section'] . '_' . $_apartment['floor'] . '_' . $_apartment['numOrder']]);
-                                    $arApartment['discount'] = $params['discount']['list'][$b_id . '_' . $_apartment['section'] . '_' . $_apartment['floor'] . '_' . $_apartment['numOrder']];
-
-                                    $arApartment['discount_cost'] = ($total_cost / 100) * ( int )$params['discount']['list'][$b_id . '_' . $_apartment['section'] . '_' . $_apartment['floor'] . '_' . $_apartment['numOrder']];
-                                }
-                            }
-                        }
-                    }
+                    if( $this->debug )
+                            $arApartment['debug'] = $this->filter->debug;
 
                     $res['flats'][$_apartment['guid']] = $arApartment;
                 }
+                if( !isset( $params['filter'] ) && !count( $params['filter'] ) )
+                    $res['flats'][$_apartment['guid']] = $arApartment;
             }
         }
-        if (!isset($params['select']))
+
+        if( !isset($params['select']) )
             return $res;
 
         foreach ($params['select'] as $type) {

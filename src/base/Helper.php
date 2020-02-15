@@ -13,7 +13,6 @@ class Helper extends BaseObject
     public function init()
     {
         $this->createPlansMap( $this->config['project'] );
-        //echo "<pre>".print_r( $this->plans_map[ $this->config['project'] ]->{$this->def_format}  ,true )."</pre>";
     }
 
 
@@ -106,6 +105,12 @@ class Helper extends BaseObject
             $arFormat[] = $format;
 
         return $arFormat;
+    }
+
+
+    public static function getFlatMixKey( $_apartment )
+    {
+        return $_apartment['building_id'] . '_' . $_apartment['section_number'] . '_' . $_apartment['floor'] . '_' . $_apartment['numOrder'];
     }
 
 }
