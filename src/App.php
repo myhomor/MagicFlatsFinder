@@ -48,8 +48,6 @@ class App extends base\BaseObject
 
         $this->filter = new base\Filter();
         $this->fields = new base\Fields( ( isset($this->config['fields_tmp']) ? $this->config['fields_tmp'] : [] ) );
-
-        echo "<pre>".print_r($this->discount->debug,true   )."</pre>";
     }
 
     /**
