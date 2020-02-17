@@ -104,11 +104,14 @@ class Filter extends BaseObject
             {
                 $_logic = key_exists( 'logic', $_filter ) ? $_filter['logic'] : self::LOGIC_DEF;
 
-                foreach ($_filter as $key => $val) {
-                    if( $key === 'logic' ) continue;
-                    $_status[$field][] = $this->_logic($element, $field, [$key => $val]) ? 'Y' : 'N';
-                }
+                foreach ($_filter as $_fkey => $_FFilter) {
+                    if( $_fkey === 'logic' ) continue;
 
+                    foreach ($_FFilter as $key => $val) {
+                        $_status[$field][] = $this->_logic($element, $field, [$key => $val]) ? 'Y' : 'N';
+                    }
+
+                }
 
                 if( $_logic == self::LOGIC_AND )
                     $status[ $field ] = in_array('N', $_status[ $field ] ) ? 'N' : 'Y';
