@@ -40,7 +40,6 @@ composer require orbit_exp/magic_flats_finder
         
     xml - ссылка на хмл фид **
     xml_type - флаг выборки из страой crm. работает только с проектом headliner. принимает одно значение hl
-    xml_file - ссылка на локальный xml
     fields_tmp - шаблон нейминга для параметров а результирующем массиве 
     debug - true / false - флаг режима отладки, по умолчанию fasle
 ```
@@ -61,6 +60,7 @@ composer require orbit_exp/magic_flats_finder
 **Параметры для передачи**
 ** - обязательные параметры
 ```php
+    xml_file (string) - ссылка на локальный xml
     select (array) - какие данные хотим получить в выбоке, принимает значения в виде массива. 
     принимиет значения  flats и building 
     
@@ -72,6 +72,7 @@ composer require orbit_exp/magic_flats_finder
     ]
     filter - параметры для фильтрации 
     discount - параметры для скидки
+    
 ```
 
 ### Фильтрация

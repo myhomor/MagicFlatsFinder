@@ -65,7 +65,7 @@ class App extends base\BaseObject
         $xml = false;
         if( isset( $params['xml_file'] ) && $this->parser->isXmlExists( $params['xml_file'] ) )
         {
-            $xml = $this->parser->loadXml( $params['xml_file'] );
+            $xml = new base\SimpleXmlExtended( $this->parser->loadXml( $params['xml_file'] )->asXml() );
         }
 
         if( !$xml ){
