@@ -40,6 +40,7 @@ composer require orbit_exp/magic_flats_finder
         
     xml - ссылка на хмл фид **
     xml_type - флаг выборки из страой crm. работает только с проектом headliner. принимает одно значение hl
+    xml_file - ссылка на локальный xml
     fields_tmp - шаблон нейминга для параметров а результирующем массиве 
     debug - true / false - флаг режима отладки, по умолчанию fasle
 ```

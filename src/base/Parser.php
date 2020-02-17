@@ -4,12 +4,12 @@ namespace MagicFlatsFinder\base;
 
 class Parser
 {
-    public $DEBUG = [];
+    public $debug = [];
     public $date_log_type = "Y-m-d H:i:s";
 
     public function log($text)
     {
-        $this->DEBUG[] = date( $this->date_log_type ) .' | '. $text;
+        $this->debug[] = date( $this->date_log_type ) .' | '. $text;
     }
 
     public static function getXmlByUrl( $url, $isXml = true )
@@ -44,26 +44,26 @@ class Parser
         return $xml;
     }
 
-   /* public function loadXml( $xml_name )
+    public function loadXml( $xml_name )
     {
         if( !is_string($xml_name) || !$xml_name ) return false;
 
         $xml = false;
-        if( file_exists( DIR_UPLOAD.'/xml/'.$xml_name.'.xml' ) )
+        if( file_exists( $xml_name ) )
         {
-            $xml = file_get_contents( DIR_UPLOAD.'/xml/'.$xml_name.'.xml' );
+            $xml = file_get_contents( $xml_name );
             $xml = simplexml_load_string($xml);
-            $this->log( 'loadXml OK: '.DIR_UPLOAD.'/xml/'.$xml_name.'.xml'.' load' );
+            $this->log( 'loadXml OK: '.$xml_name.' load' );
         }
         else
-            $this->log( 'loadXml ERROR: '.DIR_UPLOAD.'/xml/'.$xml_name.'.xml'.' IS NOT FOUND' );
+            $this->log( 'loadXml ERROR: '.$xml_name.' IS NOT FOUND' );
         return $xml;
-    }*/
+    }
 
-   /* public function isXmlExists( $file_name )
+    public function isXmlExists( $file_name )
     {
-        return file_exists( DIR_UPLOAD.'/xml/'.$file_name.'.xml' );
-    }*/
+        return file_exists( $file_name );
+    }
 
    /* public function setXmlName( $controller, $project )
     {

@@ -33,6 +33,7 @@ class App extends base\BaseObject
     protected $discount;
     protected $fields;
     protected $debug = false;
+    protected $parser;
 
     public function init()
     {
@@ -48,6 +49,7 @@ class App extends base\BaseObject
 
         $this->filter = new base\Filter();
         $this->fields = new base\Fields( ( isset($this->config['fields_tmp']) ? $this->config['fields_tmp'] : [] ) );
+        $this->parser = new base\Parser();
     }
 
     /**
@@ -60,10 +62,18 @@ class App extends base\BaseObject
      */
     public function find($house_id, $params)
     {
-        if ($this->config['project'] === self::PROJECT_HEADLINER && $this->xml_type !== self::DEF_XML_TYPE)
-            $xml = new base\SimpleXmlExtended(base\Parser::getXmlByUrl($this->config['xml']));
-        else
-            $xml = new base\SimpleXmlExtended(base\Parser::getXmlByUrl($this->config['xml'] . '?BuildingID=' . $house_id . '&deep=' . $this->deep));
+        $xml = false;
+        if( isset( $params['xml_file'] ) && $this->parser->isXmlExists( $params['xml_file'] ) )
+        {
+            $xml = $this->parser->loadXml( $params['xml_file'] );
+        }
+
+        if( !$xml ){
+            if ( $this->config['project'] === self::PROJECT_HEADLINER && $this->xml_type !== self::DEF_XML_TYPE )
+                $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl( $this->config['xml'] ) );
+            else
+                $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl($this->config['xml'] . '?BuildingID=' . $house_id . '&deep=' . $this->deep ) );
+        }
 
         return $this->_find($house_id, $params, $xml);
     }
