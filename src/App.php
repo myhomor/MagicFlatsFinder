@@ -34,6 +34,7 @@ class App extends base\BaseObject
     protected $fields;
     protected $debug = false;
     protected $parser;
+    protected $sort;
 
     public function init()
     {
@@ -89,6 +90,8 @@ class App extends base\BaseObject
     {
         $this->discount = new base\Discount( $params['discount'] );
 
+        $this->sort = new base\Sort( $params['sort'] );
+
         foreach ($xml->developers->developer->projects->project->buildings->building as $building) {
             if ((int)$building->id !== $house_id) continue;
 
@@ -133,7 +136,7 @@ class App extends base\BaseObject
                 $arNames['countTotal'] => $_apartments['countTotal'],
             ];
 
-
+            $lim_apartment = 0;
             foreach ($building->apartments->apartment as $apartment) {
                 $_apartment = (array) $apartment;
 
@@ -184,16 +187,54 @@ class App extends base\BaseObject
                         $arApartment['discount'] = $discount;
                 }
 
+                $isFiltered = false;
+
                 if( ( isset( $params['filter'] ) && count( $params['filter'] ) && $this->filter->check( 'flat', $arApartment, $params['filter'] ) ) ){
 
                     if( $this->debug )
                             $arApartment['debug'] = $this->filter->debug;
 
                     $res['flats'][$_apartment['guid']] = $arApartment;
+                    $isFiltered = true;
                 }
-                if( !isset( $params['filter'] ) && !count( $params['filter'] ) )
+
+
+                if( !isset( $params['filter'] ) && !count( $params['filter'] ) ) {
                     $res['flats'][$_apartment['guid']] = $arApartment;
+                    $isFiltered = true;
+                }
+
+
+                if( $isFiltered ) {
+                    if (isset($params['sort']) && count($params['sort']))
+                        $this->sort->addElementToSort($arApartment);
+
+                    $lim_apartment++;
+
+                    if( isset( $params['limit'] ) )
+                    {
+                        if( (int) $lim_apartment >= (int) $params['limit'] )
+                            break;
+                    }
+                }
             }
+
+
+            if( isset( $params['sort'] ) && count( $params['sort'] ) )
+            {
+                if( $arKeys = $this->sort->sort() )
+                {
+                    foreach ( $arKeys as $f_key ) {
+                        if( isset( $res['flats'][ $f_key ] ) ) {
+                            //$arSortApartments[$f_key] = [$this->sort->by => $res['flats'][$f_key][$this->sort->by] . ' || ' . ( int)$res['flats'][$f_key][$this->sort->by]];
+                            $arSortApartments[$f_key] = $res['flats'][ $f_key ];
+                        }
+                    }
+                    if( isset( $arSortApartments ) )
+                        $res['flats'] = $arSortApartments;
+                }
+            }
+
         }
 
         if( !isset($params['select']) )
