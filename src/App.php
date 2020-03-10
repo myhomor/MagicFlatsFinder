@@ -83,9 +83,13 @@ class App extends base\BaseObject
             }
 
             $_params = $params;
+            foreach ($stack as $_k_s => $_v_s)
+                $_params[ $_k_s ] = $_v_s;
+
             $_params['select'] = ['flats','building'];
 
             $info = $this->_find( $house_id, $_params, $xml );
+
             $res['flats'] = count( $info['flats'] ) ? array_merge( $res['flats'], $info['flats'] ) : $res['flats'];
             $res['building'][ $house_id ] = $info['building'];
 
@@ -125,9 +129,10 @@ class App extends base\BaseObject
 
             if( isset( $arSortApartments ) )
                 $arAllSortApartments = array_merge($arAllSortApartments, $arSortApartments);
-        }
 
-        $res['flats'] = $arAllSortApartments;
+            if( isset( $arAllSortApartments ) && count( $arAllSortApartments ) )
+                $res['flats'] = $arAllSortApartments;
+        }
 
         if( !isset($params['select']) )
             return $res;
