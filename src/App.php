@@ -36,6 +36,8 @@ class App extends base\BaseObject
     protected $parser;
     protected $sort;
 
+    private $houseStack = [];
+
     public function init()
     {
         $this->debug = $this->config['debug'] ? $this->config['debug'] : false;
@@ -52,6 +54,90 @@ class App extends base\BaseObject
         $this->fields = new base\Fields( ( isset($this->config['fields_tmp']) ? $this->config['fields_tmp'] : [] ) );
         $this->parser = new base\Parser();
     }
+
+    public function addToStack( $house_id, $params )
+    {
+        $this->houseStack[$house_id] = $params;
+    }
+
+    public function findByStack( $params )
+    {
+        $xml = false;
+        $this->sort = new base\Sort( $params['sort'] );
+        $this->discount = new base\Discount( $params['discount'] );
+
+        $res = [ 'flats' => [], 'building' => [] ];
+        $arAllSortApartments = [];
+
+        foreach ( $this->houseStack as $house_id  => $stack) {
+
+            if( isset( $stack['xml_file'] ) && $this->parser->isXmlExists( $stack['xml_file'] ) ) {
+               $xml = new base\SimpleXmlExtended( $this->parser->loadXml( $stack['xml_file'] )->asXml() );
+            }
+
+            if( !$xml ){
+                if ( $this->config['project'] === self::PROJECT_HEADLINER && $this->xml_type !== self::DEF_XML_TYPE )
+                    $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl( $this->config['xml'] ) );
+                else
+                    $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl($this->config['xml'] . '?BuildingID=' . $house_id . '&deep=' . $this->deep ) );
+            }
+
+            $_params = $params;
+            $_params['select'] = ['flats','building'];
+
+            $info = $this->_find( $house_id, $_params, $xml );
+            $res['flats'] = count( $info['flats'] ) ? array_merge( $res['flats'], $info['flats'] ) : $res['flats'];
+            $res['building'][ $house_id ] = $info['building'];
+
+        }
+
+        if( ( isset($params['sort']) && count($params['sort']) ) || isset( $params['limit'] ) ) {
+
+            if( isset($params['sort']) && count($params['sort']) ) {
+
+                if( $arKeys = $this->sort->sort() )
+                {
+                    $lim_apartment = 0;
+                    foreach ( $arKeys as $f_key ) {
+                        if( isset( $res['flats'][ $f_key ] ) ) {
+                            $arSortApartments[$f_key] = $res['flats'][ $f_key ];
+                            $lim_apartment++;
+
+                            if( isset( $params['limit'] ) )
+                            {
+                                if( (int) $lim_apartment >= (int) $params['limit'] )
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+            }elseif( isset( $params['limit'] ) ){
+
+                $lim_apartment = 0;
+                foreach ( $res['flats'] as $f_key => $flat) {
+                    $arSortApartments[$f_key] = $flat;
+                    $lim_apartment++;
+                    if( (int) $lim_apartment >= (int) $params['limit'] )
+                        break;
+                }
+            }
+
+            if( isset( $arSortApartments ) )
+                $arAllSortApartments = array_merge($arAllSortApartments, $arSortApartments);
+        }
+
+        $res['flats'] = $arAllSortApartments;
+
+        foreach ($params['select'] as $type) {
+            if (isset($res[$type])) {
+                $arRes[$type] = $res[$type];
+            }
+        }
+
+        return count($params['select']) == 1 ? $arRes[$type] : $arRes;
+    }
+
 
     /**
      * @param $house_id integer id строения из crm
@@ -76,6 +162,7 @@ class App extends base\BaseObject
                 $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl($this->config['xml'] . '?BuildingID=' . $house_id . '&deep=' . $this->deep ) );
         }
 
+        $this->sort = new base\Sort( $params['sort'] );
         return $this->_find($house_id, $params, $xml);
     }
 
@@ -89,8 +176,6 @@ class App extends base\BaseObject
     protected function _find($house_id, $params, $xml)
     {
         $this->discount = new base\Discount( $params['discount'] );
-
-        $this->sort = new base\Sort( $params['sort'] );
 
         foreach ($xml->developers->developer->projects->project->buildings->building as $building) {
             if ((int)$building->id !== $house_id) continue;
