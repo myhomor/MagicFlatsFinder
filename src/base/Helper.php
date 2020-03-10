@@ -20,7 +20,7 @@ class Helper extends BaseObject
     {
         switch ( $type ){
             case 'free':
-                return (is_null($status) ? true : ( !$status || $status === '0'  ? true : false ) );
+                return (is_null($status) ? true : ( $status === '0' || $status === 0 ? true : false ) );
         }
     }
 

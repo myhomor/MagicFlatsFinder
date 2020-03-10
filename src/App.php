@@ -54,7 +54,7 @@ class App extends base\BaseObject
     }
 
     /**
-     * @param $house_id integer id строения из crm
+     * @param $house_id array id строения из crm
      * @param $params array массив с параметрами фильтрации
      * @return mixed array
      *
@@ -64,19 +64,80 @@ class App extends base\BaseObject
     public function find($house_id, $params)
     {
         $xml = false;
+        $this->discount = new base\Discount( $params['discount'] );
+        $this->sort = new base\Sort( $params['sort'] );
+
         if( isset( $params['xml_file'] ) && $this->parser->isXmlExists( $params['xml_file'] ) )
         {
             $xml = new base\SimpleXmlExtended( $this->parser->loadXml( $params['xml_file'] )->asXml() );
         }
 
-        if( !$xml ){
-            if ( $this->config['project'] === self::PROJECT_HEADLINER && $this->xml_type !== self::DEF_XML_TYPE )
-                $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl( $this->config['xml'] ) );
-            else
-                $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl($this->config['xml'] . '?BuildingID=' . $house_id . '&deep=' . $this->deep ) );
+        if( !is_array( $house_id ) )
+            $house_id = [$house_id];
+
+        $res = [ 'flats' => [], 'building' => [] ];
+
+        foreach ( $house_id  as $h_id) {
+
+            if( !$xml ){
+                if ( $this->config['project'] === self::PROJECT_HEADLINER && $this->xml_type !== self::DEF_XML_TYPE )
+                    $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl( $this->config['xml'] ) );
+                else
+                    $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl($this->config['xml'] . '?BuildingID=' . $h_id . '&deep=' . $this->deep ) );
+            }
+
+            $_params = $params;
+            $_params['select'] = ['flats','building'];
+
+            $info = $this->_find($h_id, $_params, $xml);
+            $res['flats'] = count( $info['flats'] ) ? array_merge( $res['flats'], $info['flats'] ) : $res['flats'];
+            $res['building'][$h_id] = $info['building'];
+
         }
 
-        return $this->_find($house_id, $params, $xml);
+        if( ( isset($params['sort']) && count($params['sort']) ) || isset( $params['limit'] ) ) {
+
+            if( isset($params['sort']) && count($params['sort']) ) {
+
+                if( $arKeys = $this->sort->sort() )
+                {
+                    $lim_apartment = 0;
+                    foreach ( $arKeys as $f_key ) {
+                        if( isset( $res['flats'][ $f_key ] ) ) {
+                            $arSortApartments[$f_key] = $res['flats'][ $f_key ];
+                            $lim_apartment++;
+
+                            if( isset( $params['limit'] ) )
+                            {
+                                if( (int) $lim_apartment >= (int) $params['limit'] )
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+            }elseif( isset( $params['limit'] ) ){
+
+                $lim_apartment = 0;
+                foreach ( $res['flats'] as $f_key => $flat) {
+                    $arSortApartments[$f_key] = $flat;
+                    $lim_apartment++;
+                    if( (int) $lim_apartment >= (int) $params['limit'] )
+                            break;
+                }
+            }
+
+            if( isset( $arSortApartments ) )
+                $res['flats'] = $arSortApartments;
+        }
+
+        foreach ($params['select'] as $type) {
+            if (isset($res[$type])) {
+                $arRes[$type] = $res[$type];
+            }
+        }
+
+        return count($params['select']) == 1 ? $arRes[$type] : $arRes;
     }
 
     /**
@@ -88,10 +149,6 @@ class App extends base\BaseObject
      */
     protected function _find($house_id, $params, $xml)
     {
-        $this->discount = new base\Discount( $params['discount'] );
-
-        $this->sort = new base\Sort( $params['sort'] );
-
         foreach ($xml->developers->developer->projects->project->buildings->building as $building) {
             if ((int)$building->id !== $house_id) continue;
 
@@ -136,12 +193,11 @@ class App extends base\BaseObject
                 $arNames['countTotal'] => $_apartments['countTotal'],
             ];
 
-            $lim_apartment = 0;
             foreach ($building->apartments->apartment as $apartment) {
                 $_apartment = (array) $apartment;
 
                 if (isset($params['active']) && $params['active'] === true) {
-                    if (!$this->helper->simpleFlatStatus($_apartment['status'], 'free'))
+                    if ( !$this->helper->simpleFlatStatus( $_apartment['status'], 'free') )
                         continue;
                 }
 
@@ -156,7 +212,7 @@ class App extends base\BaseObject
                 $plan = $this->helper->getFlatPlan( $_apartment['guid'],
                                                     (int)$building->id,
                                                     $this->config['project'],
-                                                    (isset($params['plans']['format']) ? $params['plans']['format'] : false));
+                                                    (isset($params['plans']['format']) ? $params['plans']['format'] : false) );
                 $arNames = $this->fields->apartment;
                 $arApartment = [
                     $arNames['id'] => $_apartment['id'],
@@ -170,7 +226,7 @@ class App extends base\BaseObject
                     $arNames['rooms'] => $_apartment['rooms'],
                     $arNames['cost'] => str_replace(',', '.', $_apartment['cost']),
                     $arNames['squareMetrPrice'] => $_apartment['squareMetrPrice'],
-                    $arNames['status'] => ($this->helper->simpleFlatStatus($_apartment['status'], 'free') ? 1 : 0),
+                    $arNames['status'] => ($this->helper->simpleFlatStatus($_apartment['crm_status'], 'free') ? 1 : 0),
                     $arNames['crm_status'] => $_apartment['status'],
                     $arNames['plan'] => $plan,
                     $arNames['numInPlatform'] => $_apartment['numInPlatform'],
@@ -208,30 +264,6 @@ class App extends base\BaseObject
                 if( $isFiltered ) {
                     if (isset($params['sort']) && count($params['sort']))
                         $this->sort->addElementToSort($arApartment);
-
-                    $lim_apartment++;
-
-                    if( isset( $params['limit'] ) )
-                    {
-                        if( (int) $lim_apartment >= (int) $params['limit'] )
-                            break;
-                    }
-                }
-            }
-
-
-            if( isset( $params['sort'] ) && count( $params['sort'] ) )
-            {
-                if( $arKeys = $this->sort->sort() )
-                {
-                    foreach ( $arKeys as $f_key ) {
-                        if( isset( $res['flats'][ $f_key ] ) ) {
-                            //$arSortApartments[$f_key] = [$this->sort->by => $res['flats'][$f_key][$this->sort->by] . ' || ' . ( int)$res['flats'][$f_key][$this->sort->by]];
-                            $arSortApartments[$f_key] = $res['flats'][ $f_key ];
-                        }
-                    }
-                    if( isset( $arSortApartments ) )
-                        $res['flats'] = $arSortApartments;
                 }
             }
 

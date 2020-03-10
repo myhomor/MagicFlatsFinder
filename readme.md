@@ -51,7 +51,7 @@ composer require orbit_exp/magic_flats_finder
 **Пример**
 ```php
     $App->find(
-        123, // integer / id строерния 
+        123, // integer or array ([123,345,321]) / id строерния 
         [
             'select' => ['flats','building'], 
         ]
