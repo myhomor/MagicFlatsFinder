@@ -129,6 +129,9 @@ class App extends base\BaseObject
 
         $res['flats'] = $arAllSortApartments;
 
+        if( !isset($params['select']) )
+            return $res;
+
         foreach ($params['select'] as $type) {
             if (isset($res[$type])) {
                 $arRes[$type] = $res[$type];
