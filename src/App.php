@@ -205,26 +205,31 @@ class App extends base\BaseObject
                 $arNames['mountingBeginning'] => $_building['mountingBeginning'],
 
                 $arNames['countAll'] => $_apartments['countAll'],
-                $arNames['count_'] => [1 => $_apartments['count1'],
-                    2 => $_apartments['count2'],
-                    3 => $_apartments['count3'],
-                    4 => $_apartments['count4'],
-                    5 => $_apartments['count5'],
+
+                $arNames['count_'] => [
+                    1 => (int) ( $_apartments['count1'] ) ? $_apartments['count1'] : 0,
+                    2 => (int) ( $_apartments['count2'] ) ? $_apartments['count2'] : 0,
+                    3 => (int) ( $_apartments['count3'] ) ? $_apartments['count3'] : 0,
+                    4 => (int) ( $_apartments['count4'] ) ? $_apartments['count4'] : 0,
+                    5 => (int) ( $_apartments['count5'] ) ? $_apartments['count5'] : 0,
                 ],
 
-                $arNames['quantity_'] => [1 => $_apartments['quantity1'],
-                    2 => $_apartments['quantity2'],
-                    3 => $_apartments['quantity3'],
-                    4 => $_apartments['quantity4'],
-                    5 => $_apartments['quantity5'],
+                $arNames['quantity_'] => [
+                    1 => (int) ( $_apartments['quantity1'] ) ? $_apartments['quantity1'] : 0,
+                    2 => (int) ( $_apartments['quantity2'] ) ? $_apartments['quantity2'] : 0,
+                    3 => (int) ( $_apartments['quantity3'] ) ? $_apartments['quantity3'] : 0,
+                    4 => (int) ( $_apartments['quantity4'] ) ? $_apartments['quantity4'] : 0,
+                    5 => (int) ( $_apartments['quantity5'] ) ? $_apartments['quantity5'] : 0,
                 ],
 
-                $arNames['price_'] => [1 => $_apartments['price1'],
-                    2 => $_apartments['price2'],
-                    3 => $_apartments['price3'],
-                    4 => $_apartments['price4'],
-                    5 => $_apartments['price5'],
+                $arNames['price_'] => [
+                    1 => (int) ( $_apartments['price1'] ) ? $_apartments['price1'] : 0,
+                    2 => (int) ( $_apartments['price2'] ) ? $_apartments['price2'] : 0,
+                    3 => (int) ( $_apartments['price3'] ) ? $_apartments['price3'] : 0,
+                    4 => (int) ( $_apartments['price4'] ) ? $_apartments['price4'] : 0,
+                    5 => (int) ( $_apartments['price5'] ) ? $_apartments['price5'] : 0,
                 ],
+
 
                 $arNames['countTotal'] => $_apartments['countTotal'],
             ];
