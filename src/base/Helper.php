@@ -6,8 +6,12 @@ use MagicFlatsFinder\App;
 
 class Helper extends BaseObject
 {
+    const DEF_SEPARATOR = '.';
     public $plans_map;
+
+
     private $def_format = 'png';
+
 
 
     public function init()
@@ -111,6 +115,11 @@ class Helper extends BaseObject
     public static function getFlatMixKey( $_apartment )
     {
         return $_apartment['building_id'] . '_' . $_apartment['section_number'] . '_' . $_apartment['floor'] . '_' . $_apartment['numOrder'];
+    }
+
+    public static function setSeparator( $value, $old_separator, $new_separator=false )
+    {
+        return str_replace($old_separator, ( $new_separator ? $new_separator : self::DEF_SEPARATOR ), $value);
     }
 
 }

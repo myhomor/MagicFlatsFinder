@@ -215,19 +215,19 @@ class App extends base\BaseObject
                 ],
 
                 $arNames['quantity_'] => [
-                    1 => (int) ( $_apartments['quantity1'] ) ? $_apartments['quantity1'] : 0,
-                    2 => (int) ( $_apartments['quantity2'] ) ? $_apartments['quantity2'] : 0,
-                    3 => (int) ( $_apartments['quantity3'] ) ? $_apartments['quantity3'] : 0,
-                    4 => (int) ( $_apartments['quantity4'] ) ? $_apartments['quantity4'] : 0,
-                    5 => (int) ( $_apartments['quantity5'] ) ? $_apartments['quantity5'] : 0,
+                    1 => (int) ( $_apartments['quantity1'] ) ? base\Helper::setSeparator( $_apartments['quantity1'], ',') : 0,
+                    2 => (int) ( $_apartments['quantity2'] ) ? base\Helper::setSeparator( $_apartments['quantity2'], ',') : 0,
+                    3 => (int) ( $_apartments['quantity3'] ) ? base\Helper::setSeparator( $_apartments['quantity3'], ',') : 0,
+                    4 => (int) ( $_apartments['quantity4'] ) ? base\Helper::setSeparator( $_apartments['quantity4'], ',') : 0,
+                    5 => (int) ( $_apartments['quantity5'] ) ? base\Helper::setSeparator( $_apartments['quantity5'], ',') : 0,
                 ],
 
                 $arNames['price_'] => [
-                    1 => (int) ( $_apartments['price1'] ) ? $_apartments['price1'] : 0,
-                    2 => (int) ( $_apartments['price2'] ) ? $_apartments['price2'] : 0,
-                    3 => (int) ( $_apartments['price3'] ) ? $_apartments['price3'] : 0,
-                    4 => (int) ( $_apartments['price4'] ) ? $_apartments['price4'] : 0,
-                    5 => (int) ( $_apartments['price5'] ) ? $_apartments['price5'] : 0,
+                    1 => (int) ( $_apartments['price1'] ) ? base\Helper::setSeparator( $_apartments['price1'], ',') : 0,
+                    2 => (int) ( $_apartments['price2'] ) ? base\Helper::setSeparator( $_apartments['price2'], ',') : 0,
+                    3 => (int) ( $_apartments['price3'] ) ? base\Helper::setSeparator( $_apartments['price3'], ',') : 0,
+                    4 => (int) ( $_apartments['price4'] ) ? base\Helper::setSeparator( $_apartments['price4'], ',') : 0,
+                    5 => (int) ( $_apartments['price5'] ) ? base\Helper::setSeparator( $_apartments['price5'], ',') : 0,
                 ],
 
 
@@ -264,10 +264,10 @@ class App extends base\BaseObject
                     $arNames['section'] => $_apartment['section'],
                     $arNames['floor'] => $_apartment['floor'],
                     $arNames['numOrder'] => $_apartment['numOrder'],
-                    $arNames['squareCommon'] => $_apartment['squareCommon'],
+                    $arNames['squareCommon'] => base\Helper::setSeparator( $_apartment['squareCommon'], ','),
                     $arNames['rooms'] => $_apartment['rooms'],
                     $arNames['cost'] => str_replace(',', '.', $_apartment['cost']),
-                    $arNames['squareMetrPrice'] => $_apartment['squareMetrPrice'],
+                    $arNames['squareMetrPrice'] => base\Helper::setSeparator( $_apartment['squareMetrPrice'], ','),
                     $arNames['status'] => ($this->helper->simpleFlatStatus($_apartment['status'], 'free') ? 1 : 0),
                     $arNames['crm_status'] => $_apartment['status'],
                     $arNames['plan'] => $plan,
@@ -316,24 +316,10 @@ class App extends base\BaseObject
                     }
                 }
             }
-
-
-            if( isset( $params['sort'] ) && count( $params['sort'] ) )
-            {
-                if( $arKeys = $this->sort->sort() )
-                {
-                    foreach ( $arKeys as $f_key ) {
-                        if( isset( $res['flats'][ $f_key ] ) ) {
-                            //$arSortApartments[$f_key] = [$this->sort->by => $res['flats'][$f_key][$this->sort->by] . ' || ' . ( int)$res['flats'][$f_key][$this->sort->by]];
-                            $arSortApartments[$f_key] = $res['flats'][ $f_key ];
-                        }
-                    }
-                    if( isset( $arSortApartments ) )
-                        $res['flats'] = $arSortApartments;
-                }
-            }
-
         }
+
+        if( isset($res['flats']) )
+            $res['flats'] = $this->resultFlatsManager( $res['flats'], $params );
 
         if( !isset($params['select']) )
             return $res;
@@ -346,4 +332,53 @@ class App extends base\BaseObject
 
         return count($params['select']) == 1 ? $arRes[$type] : $arRes;
     }
+
+    public function resultFlatsManager( $arApartments, $params )
+    {
+        if( isset( $params['sort'] ) && count( $params['sort'] ) ){
+            if( $arKeys = $this->sort->sort() ) {
+                foreach ( $arKeys as $f_key ) {
+                    if( isset( $res['flats'][ $f_key ] ) ) {
+                        //$arSortApartments[$f_key] = [$this->sort->by => $res['flats'][$f_key][$this->sort->by] . ' || ' . ( int)$res['flats'][$f_key][$this->sort->by]];
+                        $arSortApartments[$f_key] = $arApartments[ $f_key ];
+                    }
+                }
+
+                if( isset( $arSortApartments ) )
+                    $arApartments = $arSortApartments;
+            }
+        }
+
+        if( $params['from'] || $params['limit']  ){
+
+            $lim_apartment = 0;
+            $from_id = 1;
+            foreach ( $arApartments as $guid => $arApartment ) {
+
+                if( isset( $params['from'] ) && (int) $params['from'] >= 0 ) {
+
+                    if( (int) $from_id < (int) $params['from'] ){
+                        $from_id++;
+                        continue;
+                    }
+                }
+
+                $lim_apartment++;
+                $arResApart[$guid] = $arApartment;
+
+                if( isset( $params['limit'] ) && (int) $params['limit'] > 0 ) {
+                    if ( (int)$lim_apartment >= (int)$params['limit'] )
+                        break;
+                }
+                $from_id++;
+            }
+
+            if( isset($arResApart) && count( $arResApart ) ) {
+                $arApartments = $arResApart;
+            }
+        }
+
+        return $arApartments;
+    }
+
 }
