@@ -25,7 +25,7 @@ class App extends base\BaseObject
 
     public $deep = 4;
     public $queue = 1;
-
+    public $from_id_start = 0;
 
     protected $helper;
     protected $xml_type = self::DEF_XML_TYPE;
@@ -352,7 +352,7 @@ class App extends base\BaseObject
         if( $params['from'] || $params['limit']  ){
 
             $lim_apartment = 0;
-            $from_id = 1;
+            $from_id = $this->from_id_start;
             foreach ( $arApartments as $guid => $arApartment ) {
 
                 if( isset( $params['from'] ) && (int) $params['from'] >= 0 ) {
