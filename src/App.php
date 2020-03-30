@@ -9,7 +9,6 @@ use MagicFlatsFinder\base as base;
  */
 class App extends base\BaseObject
 {
-
     const PROJECT_DOMUSKVERA = 'domskver';
     const PROJECT_DOMBOR = 'dombor';
     const PROJECT_DOM128 = 'dom128';
@@ -37,6 +36,7 @@ class App extends base\BaseObject
     protected $sort;
 
     private $houseStack = [];
+    private $map_buildings;
 
     public function init()
     {
@@ -53,6 +53,20 @@ class App extends base\BaseObject
         $this->filter = new base\Filter();
         $this->fields = new base\Fields( ( isset($this->config['fields_tmp']) ? $this->config['fields_tmp'] : [] ) );
         $this->parser = new base\Parser();
+
+
+        if( isset( $this->config['map_buildings'] ) ) {
+            $this->map_buildings = [];
+            foreach ( $this->config['map_buildings'] as $queue => $arBuilding ) {
+                foreach ( $arBuilding as $h => $h_id )
+                {
+                    $this->map_buildings[ (int) $h ] = [
+                        'queue' => (int) $queue,
+                        'building_id' => (int) $h_id
+                    ];
+                }
+            }
+        }
     }
 
     public function addToStack( $house_id, $params )
@@ -318,6 +332,91 @@ class App extends base\BaseObject
             }
         }
 
+        ///выгрузка недостающего объема квартир из локального xml файла, выгруженного из CRM
+        if( !isset($params['active']) && $params['active'] !== true
+            && isset( $this->config['full_xml_file'] )
+            && $this->parser->isXmlExists( $this->config['full_xml_file'] ) )
+        {
+            $exelFlats = $this->_findFlatsFromCrmFile( $this->config['full_xml_file'] );
+
+            foreach ($exelFlats as $key => $_apartment) {
+
+                if( (int) $house_id !== $this->map_buildings[ $_apartment['info']['house'] ]['building_id'] )
+                    continue;
+
+                if( isset( $res['flats'][$_apartment['guid']] ) )
+                    continue;
+
+                $_apartment['buildNumber'] = $this->map_buildings[ $_apartment['info']['house'] ]['building_id'];
+                $_apartment['section'] = $_apartment['info']['section'];
+                $_apartment['floor'] = $_apartment['info']['floor'];
+                $_apartment['numInPlatform'] = $_apartment['info']['pl'];
+
+
+                $plan = $this->helper->getFlatPlan(
+                    $_apartment['guid'],
+                    $this->map_buildings[ $_apartment['info']['house'] ]['building_id'],
+                    $this->config['project'],
+                    (isset($params['plans']['format']) ? $params['plans']['format'] : false));
+
+
+                $arApartment = [
+                    //$arNames['id'] => $_apartment['id'],
+                    $arNames['queue'] => $this->map_buildings[ $_apartment['info']['house'] ]['queue'],
+                    $arNames['guid'] => $_apartment['guid'],
+                    $arNames['building_id'] => $this->map_buildings[ $_apartment['info']['house'] ]['building_id'],
+                    $arNames['section'] => $_apartment['section'],
+                    $arNames['floor'] => $_apartment['floor'],
+                    $arNames['numOrder'] => $_apartment['info']['number'],
+                    $arNames['squareCommon'] => base\Helper::setSeparator($_apartment['square'], ','),
+                    $arNames['rooms'] => $_apartment['room_count'],
+                    $arNames['cost'] => base\Helper::setSeparator($_apartment['total_cost'], ','),
+                    $arNames['squareMetrPrice'] => base\Helper::setSeparator($_apartment['cost_per_meter'], ','),
+                    $arNames['status'] => 0,
+                    $arNames['crm_status'] => 'n/a',
+                    $arNames['plan'] => $plan,
+                    $arNames['numInPlatform'] => $_apartment['numInPlatform'],
+                    //$arNames['is_apartament'] => $params['build']['is_apartament'] === true ? 'Y' : 'N',
+                    //$arNames['buildNumber'] => $_apartment['buildNumber'],
+                    //$arNames['typeFinish'] => $_apartment['typeFinish'],
+
+                ];
+
+                if( ( isset( $params['filter'] ) && count( $params['filter'] ) && $this->filter->check( 'flat', $arApartment, $params['filter'] ) ) ){
+
+                   if( $this->debug )
+                       $arApartment['debug'] = $this->filter->debug;
+
+                   $res['flats'][$_apartment['guid']] = $arApartment;
+                   $isFiltered = true;
+               }
+
+
+               if( !isset( $params['filter'] ) && !count( $params['filter'] ) ) {
+                   $res['flats'][$_apartment['guid']] = $arApartment;
+                   $isFiltered = true;
+               }
+
+
+               if( $isFiltered ) {
+                   if (isset($params['sort']) && count($params['sort']))
+                       $this->sort->addElementToSort($arApartment);
+
+                   //$lim_apartment++;
+
+                   /*if( isset( $params['limit'] ) )
+                   {
+                       if( (int) $lim_apartment >= (int) $params['limit'] )
+                           break;
+                   }*/
+               }
+            }
+        }
+
+
+
+
+
         if( isset($res['flats']) )
             $res['flats'] = $this->resultFlatsManager( $res['flats'], $params );
 
@@ -333,12 +432,77 @@ class App extends base\BaseObject
         return count($params['select']) == 1 ? $arRes[$type] : $arRes;
     }
 
+
+    /*метод работает с полной xml выгрузкой из CRM*/
+    protected function _findFlatsFromCrmFile($fileName )
+    {
+        if( !$fileName || !$this->parser->isXmlExists( $fileName ) )
+            return false;
+
+        $arKeyCode = [
+            'guid', 				//[0] => (Не изменять) Артикул
+            'info', 				//[1] => Код объекта
+            'room_count',		//[2] => Комнат
+            'status',			//[3] => Состояние объекта
+            'total_cost',		//[4] => Стоимость продажи
+            'square',			//[5] => Количество
+            'square_type',		//[6] => Единица объекта
+            'cost_per_meter', //[7] => Цена продажи
+            'type', 				//[8] => Тип объекта
+            'type_id',			//[9] => Подтип объекта
+            'address',			//[10] => Адрес (строение)
+        ];
+
+        $arKeyFlatID = [
+            'house',
+            'type_flat',
+            'section',
+            'floor',
+            'pl',
+            'number',
+        ];
+
+        $xml = new \SimpleXMLElement( $this->parser->loadXml( $fileName )->asXml() );
+
+        $ff=false;
+        foreach ( $xml->Worksheet->Table->Row as $row )
+        {
+            if(!$ff){$ff=true; continue;}
+
+            $i=0;
+            foreach( $row->Cell as $oCell )
+            {
+                $data = (string) $oCell->Data;
+
+                if( $i===1 )
+                {
+                    $data = explode('-', $data);
+                    foreach ($data as $Dkey => $val)
+                        $data_[ $arKeyFlatID[ $Dkey ] ] = $arKeyFlatID[ $Dkey ] === 'house' ? (int) preg_replace('/[^0-9]/', '', $val) : (int) $val;
+
+                    $data = $data_;
+                }
+
+                $arCell[ $arKeyCode[$i++] ] = $data;
+            }
+            $arRowAll[] = $arCell;
+            $arCell = [];
+        }
+
+        return $arRowAll;
+    }
+
+
+
     public function resultFlatsManager( $arApartments, $params )
     {
         if( isset( $params['sort'] ) && count( $params['sort'] ) ){
+
             if( $arKeys = $this->sort->sort() ) {
-                foreach ( $arKeys as $f_key ) {
-                    if( isset( $res['flats'][ $f_key ] ) ) {
+
+                foreach ( $arKeys as $f_fk => $f_key ) {
+
+                    if( isset( $arApartments[ $f_key ] ) ) {
                         //$arSortApartments[$f_key] = [$this->sort->by => $res['flats'][$f_key][$this->sort->by] . ' || ' . ( int)$res['flats'][$f_key][$this->sort->by]];
                         $arSortApartments[$f_key] = $arApartments[ $f_key ];
                     }
@@ -348,7 +512,6 @@ class App extends base\BaseObject
                     $arApartments = $arSortApartments;
             }
         }
-
         if( $params['from'] || $params['limit']  ){
 
             $lim_apartment = 0;

@@ -42,6 +42,14 @@ composer require orbit_exp/magic_flats_finder
     xml_type - флаг выборки из страой crm. работает только с проектом headliner. принимает одно значение hl
     fields_tmp - шаблон нейминга для параметров а результирующем массиве 
     debug - true / false - флаг режима отладки, по умолчанию fasle
+    
+    full_xml_file - ссылка на полный фид из crm
+    map_buildings - карта строений объекта, обязательна при указании full_xml_file
+        // очередь => строения очереди
+        1 =[
+            //номер строения => building_id
+            1 => 123
+        ]
 ```
 
 ### Простой поиск
@@ -261,7 +269,7 @@ floor_number - название поля из фида
     'sort' => [
                 'by' => 'square',
                 'type' => 'DESC',
-                'separator' => ','
+                'separator' => '.'
           ],
 ```
 
@@ -271,6 +279,15 @@ floor_number - название поля из фида
     'limit' => 13,
 ```
 
+### **Очереди**
+Когда у ЖК несколько строений, то можно формировать очереди для дальнейшей выборки
+
+```php
+$App->addToStack( 123, ['xml_file' => path_to_xml.xml'] );
+$App->addToStack( 456, ['xml_file' => path_to_xml.xml'] );
+
+$App->findByStack( $filter_and_sort_params );
+```
 
 ### **Важно**
 
