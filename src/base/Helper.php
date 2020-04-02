@@ -114,7 +114,7 @@ class Helper extends BaseObject
 
     public static function getFlatMixKey( $_apartment )
     {
-        return $_apartment['building_id'] . '_' . $_apartment['section_number'] . '_' . $_apartment['floor'] . '_' . $_apartment['numOrder'];
+        return $_apartment['building_id'] . '_' . $_apartment['section'] . '_' . $_apartment['floor'] . '_' . $_apartment['numOrder'];
     }
 
     public static function setSeparator( $value, $old_separator, $new_separator=false )

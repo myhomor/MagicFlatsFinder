@@ -264,25 +264,32 @@ class App extends base\BaseObject
                         ? $params['build']['number']
                         : (preg_replace("/[^0-9]/", '', (string)$building->buildNumber)));
 
+                $_apartment['building_id'] = (int)$building->id;
 
                 $plan = $this->helper->getFlatPlan( $_apartment['guid'],
                                                     (int)$building->id,
                                                     $this->config['project'],
                                                     (isset($params['plans']['format']) ? $params['plans']['format'] : false));
                 $arNames = $this->fields->apartment;
+
+                $_apartment['squareCommon'] = base\Helper::setSeparator( $_apartment['squareCommon'], ',');
+                $_apartment['cost'] = str_replace(',', '.', $_apartment['cost']);
+                $_apartment['squareMetrPrice'] = base\Helper::setSeparator( $_apartment['squareMetrPrice'], ',');
+                $_apartment['status'] = ($this->helper->simpleFlatStatus($_apartment['status'], 'free') ? 1 : 0);
+
                 $arApartment = [
                     $arNames['id'] => $_apartment['id'],
                     $arNames['queue'] => $_apartment['queue'],
                     $arNames['guid'] => $_apartment['guid'],
-                    $arNames['building_id'] => (int)$building->id,
+                    $arNames['building_id'] => $_apartment['building_id'],
                     $arNames['section'] => $_apartment['section'],
                     $arNames['floor'] => $_apartment['floor'],
                     $arNames['numOrder'] => $_apartment['numOrder'],
-                    $arNames['squareCommon'] => base\Helper::setSeparator( $_apartment['squareCommon'], ','),
+                    $arNames['squareCommon'] => $_apartment['squareCommon'],
                     $arNames['rooms'] => $_apartment['rooms'],
-                    $arNames['cost'] => str_replace(',', '.', $_apartment['cost']),
-                    $arNames['squareMetrPrice'] => base\Helper::setSeparator( $_apartment['squareMetrPrice'], ','),
-                    $arNames['status'] => ($this->helper->simpleFlatStatus($_apartment['status'], 'free') ? 1 : 0),
+                    $arNames['cost'] => $_apartment['cost'],
+                    $arNames['squareMetrPrice'] => $_apartment['squareMetrPrice'],
+                    $arNames['status'] => $_apartment['status'],
                     $arNames['crm_status'] => $_apartment['status'],
                     $arNames['plan'] => $plan,
                     $arNames['numInPlatform'] => $_apartment['numInPlatform'],
@@ -292,16 +299,16 @@ class App extends base\BaseObject
                 ];
 
                 if( isset( $params['discount'] ) ) {
-                    if( !key_exists( base\Discount::PARAM_TOTAL_COST, $arApartment ) )
-                        $arApartment[ base\Discount::PARAM_TOTAL_COST ] = $arApartment[ $arNames['cost'] ];
+                    if( !key_exists( base\Discount::PARAM_TOTAL_COST, $_apartment ) )
+                        $_apartment[ base\Discount::PARAM_TOTAL_COST ] = $_apartment['cost'];
 
-                    if( $discount = $this->discount->setDiscount( $arApartment ) )
+                    if( $discount = $this->discount->setDiscount( $_apartment ) )
                         $arApartment['discount'] = $discount;
                 }
 
                 $isFiltered = false;
 
-                if( ( isset( $params['filter'] ) && count( $params['filter'] ) && $this->filter->check( 'flat', $arApartment, $params['filter'] ) ) ){
+                if( ( isset( $params['filter'] ) && count( $params['filter'] ) && $this->filter->check( 'flat', $_apartment, $params['filter'] ) ) ){
 
                     if( $this->debug )
                             $arApartment['debug'] = $this->filter->debug;
