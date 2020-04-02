@@ -58,7 +58,11 @@ class Helper extends BaseObject
 
         $format = $project === App::PROJECT_DOMBOR ? 'jpg' : $format;
 
-        return $this->checkFlatPlan( $guid, $house_id, $project, $format ) ? $this->plans_map[ $project ]->{ $format }->{ $house_id }->{ $guid } : false;
+        return $this->checkFlatPlan( $guid, $house_id, $project, $format )
+            ? isset( $this->plans_map[ $project ]->{ $format }->{ $house_id }->{ $guid } )
+                ? $this->plans_map[ $project ]->{ $format }->{ $house_id }->{ $guid }
+                : $this->plans_map[ $project ]->{ $format }->{ 'all' }->{ $guid }
+            : false;
     }
 
 
@@ -79,10 +83,10 @@ class Helper extends BaseObject
         }
 
         if( !isset( $this->plans_map[ $project ]->{ $format }->{ $house_id } ) ) {
-            return false;
+            return isset( $this->plans_map[ $project ]->{ $format }->{ 'all' }->{ $guid } );
+        } else {
+            return isset( $this->plans_map[ $project ]->{ $format }->{ $house_id }->{ $guid } );
         }
-
-        return isset( $this->plans_map[ $project ]->{ $format }->{ $house_id }->{ $guid } );
     }
 
 

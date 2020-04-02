@@ -85,68 +85,21 @@ class App extends base\BaseObject
 
         foreach ( $this->houseStack as $house_id  => $stack) {
 
-            if( isset( $stack['xml_file'] ) && $this->parser->isXmlExists( $stack['xml_file'] ) ) {
-               $xml = new base\SimpleXmlExtended( $this->parser->loadXml( $stack['xml_file'] )->asXml() );
-            }
-
-            if( !$xml ){
-                if ( $this->config['project'] === self::PROJECT_HEADLINER && $this->xml_type !== self::DEF_XML_TYPE )
-                    $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl( $this->config['xml'] ) );
-                else
-                    $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl($this->config['xml'] . '?BuildingID=' . $house_id . '&deep=' . $this->deep ) );
-            }
-
             $_params = $params;
             foreach ($stack as $_k_s => $_v_s)
                 $_params[ $_k_s ] = $_v_s;
 
             $_params['select'] = ['flats','building'];
+            $_params['_noFlatsManager'] = 'Y';
 
-            $info = $this->_find( $house_id, $_params, $xml );
+            $info = $this->find( $house_id, $_params );
 
             $res['flats'] = count( $info['flats'] ) ? array_merge( $res['flats'], $info['flats'] ) : $res['flats'];
             $res['building'][ $house_id ] = $info['building'];
 
         }
 
-        if( ( isset($params['sort']) && count($params['sort']) ) || isset( $params['limit'] ) ) {
-
-            if( isset($params['sort']) && count($params['sort']) ) {
-
-                if( $arKeys = $this->sort->sort() )
-                {
-                    $lim_apartment = 0;
-                    foreach ( $arKeys as $f_key ) {
-                        if( isset( $res['flats'][ $f_key ] ) ) {
-                            $arSortApartments[$f_key] = $res['flats'][ $f_key ];
-                            $lim_apartment++;
-
-                            if( isset( $params['limit'] ) )
-                            {
-                                if( (int) $lim_apartment >= (int) $params['limit'] )
-                                    break;
-                            }
-                        }
-                    }
-                }
-
-            }elseif( isset( $params['limit'] ) ){
-
-                $lim_apartment = 0;
-                foreach ( $res['flats'] as $f_key => $flat) {
-                    $arSortApartments[$f_key] = $flat;
-                    $lim_apartment++;
-                    if( (int) $lim_apartment >= (int) $params['limit'] )
-                        break;
-                }
-            }
-
-            if( isset( $arSortApartments ) )
-                $arAllSortApartments = array_merge($arAllSortApartments, $arSortApartments);
-
-            if( isset( $arAllSortApartments ) && count( $arAllSortApartments ) )
-                $res['flats'] = $arAllSortApartments;
-        }
+        $res['flats'] = $this->resultFlatsManager( $res['flats'], $params );
 
         if( !isset($params['select']) )
             return $res;
@@ -184,7 +137,10 @@ class App extends base\BaseObject
                 $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl($this->config['xml'] . '?BuildingID=' . $house_id . '&deep=' . $this->deep ) );
         }
 
-        $this->sort = new base\Sort( $params['sort'] );
+
+        if( !isset( $params['_noFlatsManager'] ) || $params['_noFlatsManager'] !== 'Y' )
+            $this->sort = new base\Sort( $params['sort'] );
+
         return $this->_find($house_id, $params, $xml);
     }
 
@@ -253,6 +209,7 @@ class App extends base\BaseObject
                 $_apartment = (array) $apartment;
 
                 if (isset($params['active']) && $params['active'] === true) {
+
                     if (!$this->helper->simpleFlatStatus($_apartment['status'], 'free'))
                         continue;
                 }
@@ -275,7 +232,7 @@ class App extends base\BaseObject
                 $_apartment['squareCommon'] = base\Helper::setSeparator( $_apartment['squareCommon'], ',');
                 $_apartment['cost'] = str_replace(',', '.', $_apartment['cost']);
                 $_apartment['squareMetrPrice'] = base\Helper::setSeparator( $_apartment['squareMetrPrice'], ',');
-                $_apartment['status'] = ($this->helper->simpleFlatStatus($_apartment['status'], 'free') ? 1 : 0);
+                //$_apartment['status'] = ($this->helper->simpleFlatStatus($_apartment['status'], 'free') ? 1 : 0);
 
                 $arApartment = [
                     $arNames['id'] => $_apartment['id'],
@@ -289,7 +246,7 @@ class App extends base\BaseObject
                     $arNames['rooms'] => $_apartment['rooms'],
                     $arNames['cost'] => $_apartment['cost'],
                     $arNames['squareMetrPrice'] => $_apartment['squareMetrPrice'],
-                    $arNames['status'] => $_apartment['status'],
+                    $arNames['status'] => ($this->helper->simpleFlatStatus($_apartment['status'], 'free') ? 1 : 0),
                     $arNames['crm_status'] => $_apartment['status'],
                     $arNames['plan'] => $plan,
                     $arNames['numInPlatform'] => $_apartment['numInPlatform'],
@@ -384,8 +341,8 @@ class App extends base\BaseObject
                     $arNames['plan'] => $plan,
                     $arNames['numInPlatform'] => $_apartment['numInPlatform'],
                     //$arNames['is_apartament'] => $params['build']['is_apartament'] === true ? 'Y' : 'N',
-                    //$arNames['buildNumber'] => $_apartment['buildNumber'],
-                    //$arNames['typeFinish'] => $_apartment['typeFinish'],
+                    $arNames['buildNumber'] => $_apartment['buildNumber'],
+                    $arNames['typeFinish'] => $_apartment['typeFinish'],
 
                 ];
 
@@ -423,9 +380,10 @@ class App extends base\BaseObject
 
 
 
-
-        if( isset($res['flats']) )
-            $res['flats'] = $this->resultFlatsManager( $res['flats'], $params );
+        if( !isset( $params['_noFlatsManager'] ) || $params['_noFlatsManager'] !== 'Y' ) {
+            if (isset($res['flats']))
+                $res['flats'] = $this->resultFlatsManager($res['flats'], $params);
+        }
 
         if( !isset($params['select']) )
             return $res;
