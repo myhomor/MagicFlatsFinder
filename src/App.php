@@ -41,7 +41,7 @@ class App extends base\SimpleClass
         if (isset($this->config['xml_type']))
             $this->xml_type = $this->config['xml_type'];
 
-        $this->filter = new base\Filter();
+        $this->filter = new base\Filter( $this->config );
         $this->parser = new base\Parser();
 
 
