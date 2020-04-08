@@ -135,6 +135,8 @@ class Filter extends SimpleClass
 
     protected function _logic( $element, $field, $_filter )
     {
+        if( !isset( $element[$field] ) || is_null( $element[$field] ) ) return false;
+
         foreach ($_filter as $__key => $__val) {
                 if ($__key === '>' && ( (int)$element[$field] < (int)$__val || (int)$element[$field] === (int)$__val ) ) return false;
                 if ($__key === '<' && ( (int)$element[$field] > (int)$__val || (int)$element[$field] === (int)$__val ) ) return false;
