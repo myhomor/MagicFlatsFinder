@@ -68,7 +68,6 @@ class App extends base\SimpleClass
     {
         $xml = false;
         $this->sort = new base\Sort( $params['sort'] );
-        $this->discount = new base\Discount( $params['discount'] );
 
         $res = [ 'flats' => [], 'building' => [] ];
         $arAllSortApartments = [];
