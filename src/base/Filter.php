@@ -2,7 +2,7 @@
 namespace MagicFlatsFinder\base;
 
 
-class Filter extends BaseObject
+class Filter extends SimpleClass
 {
     const LOGIC_AND = 'AND';
     const LOGIC_OR = 'OR';
@@ -62,13 +62,13 @@ class Filter extends BaseObject
         foreach ( $filter as $type => $list )
         {
             if( $type === 'mixed_key' )
-                $_key = Helper::getFlatMixKey( $element );
+                $_key = $this->helper->getFlatMixKey( $element );
 
             if( $type === 'id' )
-                $_key = $element['id'];
+                $_key = $element[ $this->fields->apartment['id'] ];
 
             if( $type === 'guid' )
-                $_key = $element['guid'];
+                $_key = $element[ $this->fields->apartment['guid'] ];
 
             $_status = ( !in_array( $_key, $list ) ) ? 'N' : 'Y';
 

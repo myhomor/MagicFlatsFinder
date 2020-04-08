@@ -6,20 +6,23 @@ class BaseObject
 {
     public $config;
 
+    protected $debug = false;
+
     public function __construct($config = [])
     {
         $this->config  = $config;
 
+        $this->debug = $this->config['debug'] ? $this->config['debug'] : false;
+
+        $this->customizer();
         $this->init();
     }
 
     /**
      * Инициализация объекта после конструктора
      */
-    public function init()
-    {
-
-    }
+    public function init(){}
+    public function customizer(){}
 
     public static function className()
     {

@@ -7,7 +7,7 @@ use MagicFlatsFinder\base as base;
  * Class App
  * @package MagicFlatsFinder
  */
-class App extends base\BaseObject
+class App extends base\SimpleClass
 {
     const PROJECT_DOMUSKVERA = 'domskver';
     const PROJECT_DOMBOR = 'dombor';
@@ -26,11 +26,9 @@ class App extends base\BaseObject
     public $queue = 1;
     public $from_id_start = 0;
 
-    protected $helper;
     protected $xml_type = self::DEF_XML_TYPE;
     protected $filter;
     protected $discount;
-    protected $fields;
     protected $debug = false;
     protected $parser;
     protected $sort;
@@ -40,18 +38,10 @@ class App extends base\BaseObject
 
     public function init()
     {
-        $this->debug = $this->config['debug'] ? $this->config['debug'] : false;
-
         if (isset($this->config['xml_type']))
             $this->xml_type = $this->config['xml_type'];
 
-        $this->helper = new base\Helper([
-            'project' => $this->config['project'],
-            'map' => 'http://feeds.dev.kortros.ru'
-        ]);
-
         $this->filter = new base\Filter();
-        $this->fields = new base\Fields( ( isset($this->config['fields_tmp']) ? $this->config['fields_tmp'] : [] ) );
         $this->parser = new base\Parser();
 
 
@@ -265,7 +255,7 @@ class App extends base\BaseObject
 
                 $isFiltered = false;
 
-                if( ( isset( $params['filter'] ) && count( $params['filter'] ) && $this->filter->check( 'flat', $_apartment, $params['filter'] ) ) ){
+                if( ( isset( $params['filter'] ) && count( $params['filter'] ) && $this->filter->check( 'flat', $arApartment, $params['filter'] ) ) ){
 
                     if( $this->debug )
                             $arApartment['debug'] = $this->filter->debug;

@@ -1,7 +1,7 @@
 <?php
 namespace MagicFlatsFinder\base;
 
-class Discount extends BaseObject
+class Discount extends SimpleClass
 {
     const KEY_MIX = 'mixed_key';
     const KEY_ID = 'id';
@@ -50,8 +50,8 @@ class Discount extends BaseObject
             {
                 //допилить передачу скидки
                 case self::KEY_MIX:
-                    if( key_exists( Helper::getFlatMixKey($element), $this->list ) &&  $this->list[ Helper::getFlatMixKey( $element ) ] !== 0 ) {
-                        $e_key = Helper::getFlatMixKey($element);
+                    if( key_exists( $this->helper->getFlatMixKey($element), $this->list ) &&  $this->list[ $this->helper->getFlatMixKey( $element ) ] !== 0 ) {
+                        $e_key = $this->helper->getFlatMixKey($element);
                         $status_list = true;
                     }
                         break;

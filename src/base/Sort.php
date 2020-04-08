@@ -2,7 +2,7 @@
 namespace MagicFlatsFinder\base;
 
 
-class Sort extends BaseObject
+class Sort extends SimpleClass
 {
     public $type = 'ASC';
     public $by;
@@ -17,7 +17,7 @@ class Sort extends BaseObject
         if( $this->config )
         {
             $this->by = $this->config['by'];
-            $this->type = isset($this->config['type']) ? $this->config['type'] : $this->type;
+            $this->type = isset($this->config['type']) ? mb_strtoupper( $this->config['type'] ) : $this->type;
             $this->el_key = isset($this->config['key']) ? $this->config['key'] : $this->el_key;
             $this->separator = isset( $this->config['separator'] ) ? $this->config['separator'] : $this->separator;
         }
