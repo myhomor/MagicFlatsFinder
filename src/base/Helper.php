@@ -128,5 +128,9 @@ class Helper extends BaseObject
         return str_replace($old_separator, ( $new_separator ? $new_separator : self::DEF_SEPARATOR ), $value);
     }
 
+    public static function getValue( $param )
+    {
+        return !empty( $param ) && isset( $param ) && !is_null( $param ) ? $param : '';
+    }
 }
 

@@ -153,15 +153,19 @@ class App extends base\SimpleClass
             $arNames = $this->fields->building;
 
             $res['building'] = [
-                $arNames['price'] => ['max' => $_building['maxPrice'], 'min' => $_building['minPrice']],
-                $arNames['id'] => $_building['id'],
-                $arNames['name'] => $_building['name'],
-                $arNames['adressBuild'] => $_building['adressBuild'],
-                $arNames['status'] => $_building['status'],
-                $arNames['sectionCount'] => $_building['sectionCount'],
-                $arNames['floorsCount'] => $_building['floorsCount'],
-                $arNames['deliveryPeriod'] => $_building['deliveryPeriod'],
-                $arNames['mountingBeginning'] => $_building['mountingBeginning'],
+                $arNames['price']               => [
+                        'max' => base\Helper::getValue( $_building['maxPrice'] ),
+                        'min' => base\Helper::getValue( $_building['minPrice'] )
+                    ],
+
+                $arNames['id']              => base\Helper::getValue($_building['id']),
+                $arNames['name']            => base\Helper::getValue($_building['name']),
+                $arNames['adressBuild']     => base\Helper::getValue($_building['adressBuild']),
+                $arNames['status']          => base\Helper::getValue($_building['status']),
+                $arNames['sectionCount']    => base\Helper::getValue($_building['sectionCount']),
+                $arNames['floorsCount']     => base\Helper::getValue($_building['floorsCount']),
+                $arNames['deliveryPeriod']  => base\Helper::getValue( $_building['deliveryPeriod'] ),
+                $arNames['mountingBeginning'] => base\Helper::getValue( $_building['mountingBeginning'] ),
 
                 $arNames['countAll'] => $_apartments['countAll'],
 
@@ -224,24 +228,24 @@ class App extends base\SimpleClass
                 //$_apartment['status'] = ($this->helper->simpleFlatStatus($_apartment['status'], 'free') ? 1 : 0);
 
                 $arApartment = [
-                    $arNames['id'] => $_apartment['id'],
-                    $arNames['queue'] => $_apartment['queue'],
-                    $arNames['guid'] => $_apartment['guid'],
-                    $arNames['building_id'] => $_apartment['building_id'],
-                    $arNames['section'] => $_apartment['section'],
-                    $arNames['floor'] => $_apartment['floor'],
-                    $arNames['numOrder'] => $_apartment['numOrder'],
-                    $arNames['squareCommon'] => $_apartment['squareCommon'],
-                    $arNames['rooms'] => $_apartment['rooms'],
-                    $arNames['cost'] => $_apartment['cost'],
-                    $arNames['squareMetrPrice'] => $_apartment['squareMetrPrice'],
-                    $arNames['status'] => ($this->helper->simpleFlatStatus($_apartment['status'], 'free') ? 1 : 0),
-                    $arNames['crm_status'] => $_apartment['status'],
-                    $arNames['plan'] => $plan,
-                    $arNames['numInPlatform'] => $_apartment['numInPlatform'],
-                    $arNames['is_apartament'] => $params['build']['is_apartament'] === true ? 'Y' : 'N',
-                    $arNames['buildNumber'] => $_apartment['buildNumber'],
-                    $arNames['typeFinish'] => $_apartment['typeFinish'],
+                    $arNames['id']              => base\Helper::getValue($_apartment['id']),
+                    $arNames['queue']           => base\Helper::getValue($_apartment['queue']),
+                    $arNames['guid']            => base\Helper::getValue($_apartment['guid']),
+                    $arNames['building_id']     => base\Helper::getValue($_apartment['building_id']),
+                    $arNames['section']         => base\Helper::getValue($_apartment['section']),
+                    $arNames['floor']           => base\Helper::getValue($_apartment['floor']),
+                    $arNames['numOrder']        => base\Helper::getValue($_apartment['numOrder']),
+                    $arNames['squareCommon']    => base\Helper::getValue($_apartment['squareCommon']),
+                    $arNames['rooms']           => base\Helper::getValue($_apartment['rooms']),
+                    $arNames['cost']            => base\Helper::getValue($_apartment['cost']),
+                    $arNames['squareMetrPrice'] => base\Helper::getValue($_apartment['squareMetrPrice']),
+                    $arNames['status']          => ($this->helper->simpleFlatStatus($_apartment['status'], 'free') ? 1 : 0),
+                    $arNames['crm_status']      => base\Helper::getValue($_apartment['status']),
+                    $arNames['plan']            => $plan,
+                    $arNames['numInPlatform']   => base\Helper::getValue($_apartment['numInPlatform']),
+                    $arNames['is_apartament']   => $params['build']['is_apartament'] === true ? 'Y' : 'N',
+                    $arNames['buildNumber']     => base\Helper::getValue($_apartment['buildNumber']),
+                    $arNames['typeFinish']      => base\Helper::getValue($_apartment['typeFinish']),
                 ];
 
                 if( isset( $params['discount'] ) ) {
