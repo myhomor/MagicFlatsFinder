@@ -130,7 +130,7 @@ class Helper extends BaseObject
 
     public static function getValue( $param )
     {
-        return !empty( $param ) && isset( $param ) && !is_null( $param ) ? $param : '';
+        return isset( $param ) && !is_null( $param ) ? $param : '';
     }
 }
 
