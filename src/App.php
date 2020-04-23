@@ -289,12 +289,18 @@ class App extends base\SimpleClass
             }
         }
 
+        $full_xml_file_type = false;
+        if( isset( $this->config['full_xml_file'] ) ) {
+            if( $this->parser->isXmlExists( $this->config['full_xml_file'] ) )
+                $full_xml_file_type = base\Parser::TYPE_XML_FILE;
+            elseif ( $this->parser->isUrlExists( $this->config['full_xml_file'] ) )
+                $full_xml_file_type = base\Parser::TYPE_XML_LINK;
+        }
+
         ///выгрузка недостающего объема квартир из локального xml файла, выгруженного из CRM
-        if( !isset($params['active']) && $params['active'] !== true
-            && isset( $this->config['full_xml_file'] )
-            && $this->parser->isXmlExists( $this->config['full_xml_file'] ) )
+        if( !isset($params['active']) && $params['active'] !== true && $full_xml_file_type )
         {
-            $exelFlats = $this->_findFlatsFromCrmFile( $this->config['full_xml_file'] );
+            $exelFlats = $this->_findFlatsFromCrm( $this->config['full_xml_file'], $full_xml_file_type );
 
             foreach ($exelFlats as $key => $_apartment) {
 
@@ -391,10 +397,10 @@ class App extends base\SimpleClass
     }
 
 
-    /*метод работает с полной xml выгрузкой из CRM*/
-    protected function _findFlatsFromCrmFile($fileName )
+    /*метод выгружает все квартиры из локального файла xml выгрузки из CRM) или ссылки на него*/
+    protected function _findFlatsFromCrm( $fileName, $file_type )
     {
-        if( !$fileName || !$this->parser->isXmlExists( $fileName ) )
+        if( !$fileName  )
             return false;
 
         $arKeyCode = [
@@ -420,7 +426,7 @@ class App extends base\SimpleClass
             'number',
         ];
 
-        $xml = new \SimpleXMLElement( $this->parser->loadXml( $fileName )->asXml() );
+        $xml = new \SimpleXMLElement( $this->parser->loadXml( $fileName, $file_type )->asXml() );
 
         $ff=false;
         foreach ( $xml->Worksheet->Table->Row as $row )
@@ -449,7 +455,6 @@ class App extends base\SimpleClass
 
         return $arRowAll;
     }
-
 
 
     public function resultFlatsManager( $arApartments, $params )

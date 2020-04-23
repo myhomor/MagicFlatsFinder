@@ -43,7 +43,7 @@ composer require orbit_exp/magic_flats_finder
     fields_tmp - шаблон нейминга для параметров а результирующем массиве 
     debug - true / false - флаг режима отладки, по умолчанию fasle
     
-    full_xml_file - ссылка на полный фид из crm
+    full_xml_file - ссылка на полную xml выгрузку из crm. Файл или ссылка
     map_buildings - карта строений объекта, обязательна при указании full_xml_file
         // очередь => строения очереди
         1 =[
