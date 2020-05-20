@@ -97,6 +97,7 @@ class Fields extends BaseObject
             'is_apartament' => 'is_apartament',
             'buildNumber' => 'buildNumber',
             "typeFinish" => 'type_finish',
+            "oral_reserv" => 'oral_reserv',
         ];
     }
 

@@ -30,6 +30,10 @@ class Helper extends BaseObject
         }
     }
 
+    public function getSimpleFlatOralReservStatus( $status, $status2 )
+    {
+        return (is_null($status) || is_null($status2) ? false : ( ($status === 1 || $status === '1') && ($status2 === 1 || $status2 === '1') ? true : false ) );
+    }
 
     protected function createPlansMap( $project )
     {
@@ -128,12 +132,12 @@ class Helper extends BaseObject
         return str_replace($old_separator, ( $new_separator ? $new_separator : self::DEF_SEPARATOR ), $value);
     }
 
-    public static function getValue( $param )
+    public static function getValue( $param, $def_val = '' )
     {
         return gettype( $param ) === 'object'
-                ? ''
+                ? $def_val
                 : isset( $param ) && !is_null( $param )
-                    ? $param : '';
+                    ? $param : $def_val;
     }
 
 }

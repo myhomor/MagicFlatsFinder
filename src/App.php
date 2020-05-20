@@ -214,6 +214,15 @@ class App extends base\SimpleClass
                         continue;
                 }
 
+                //устная бронь
+                if( isset($params['OralReservIsActive']) && $params['OralReservIsActive'] === true ) {
+                    if ( $this->helper->getSimpleFlatOralReservStatus( $_apartment['status'], $_apartment['status2'] ) ) {
+                        $_apartment['crm_status'] = $_apartment['status2'];
+                        $_apartment['status'] = 0;
+                        $_apartment['oral_reserv'] = 1;
+                    }
+                }
+
                 $_apartment['buildNumber'] = (isset($params['build']['number'])
                         ? $params['build']['number']
                         : (preg_replace("/[^0-9]/", '', (string)$building->buildNumber)));
@@ -251,7 +260,8 @@ class App extends base\SimpleClass
                     $arNames['cost']            => base\Helper::getValue($_apartment['cost']),
                     $arNames['squareMetrPrice'] => base\Helper::getValue($_apartment['squareMetrPrice']),
                     $arNames['status']          => ($this->helper->simpleFlatStatus($_apartment['status'], 'free') ? 1 : 0),
-                    $arNames['crm_status']      => base\Helper::getValue($_apartment['status']),
+                    $arNames['crm_status']      => base\Helper::getValue( ( isset($_apartment['crm_status']) ? $_apartment['crm_status'] : $_apartment['status'] ) ),
+                    $arNames['oral_reserv']     => base\Helper::getValue($_apartment['oral_reserv'], 0),
                     $arNames['plan']            => $plan,
                     $arNames['numInPlatform']   => base\Helper::getValue($_apartment['numInPlatform']),
                     $arNames['is_apartament']   => $params['build']['is_apartament'] === true ? 'Y' : 'N',
