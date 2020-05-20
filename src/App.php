@@ -35,6 +35,7 @@ class App extends base\SimpleClass
 
     private $houseStack = [];
     private $map_buildings;
+    private $map_buildings_id;
 
     public function init()
     {
@@ -47,12 +48,18 @@ class App extends base\SimpleClass
 
         if( isset( $this->config['map_buildings'] ) ) {
             $this->map_buildings = [];
+            $this->map_buildings_id = [];
             foreach ( $this->config['map_buildings'] as $queue => $arBuilding ) {
                 foreach ( $arBuilding as $h => $h_id )
                 {
                     $this->map_buildings[ (int) $h ] = [
                         'queue' => (int) $queue,
                         'building_id' => (int) $h_id
+                    ];
+
+                    $this->map_buildings_id[ (int) $h_id ] = [
+                        'queue' => (int) $queue,
+                        'house_id' => (int) $h
                     ];
                 }
             }
@@ -207,19 +214,23 @@ class App extends base\SimpleClass
                         continue;
                 }
 
-
-                $_apartment['queue'] = $params['queue'] ? $params['queue'] : $this->queue;
-
                 $_apartment['buildNumber'] = (isset($params['build']['number'])
                         ? $params['build']['number']
                         : (preg_replace("/[^0-9]/", '', (string)$building->buildNumber)));
 
                 $_apartment['building_id'] = (int)$building->id;
 
+                $_apartment['queue'] = $params['queue']
+                    ? $params['queue']
+                    : (isset( $this->map_buildings_id[ $_apartment['building_id'] ] )
+                        ? (int) $this->map_buildings_id[ $_apartment['building_id'] ]['queue']
+                        : $this->queue );
+
                 $plan = $this->helper->getFlatPlan( $_apartment['guid'],
                                                     (int)$building->id,
                                                     $this->config['project'],
                                                     (isset($params['plans']['format']) ? $params['plans']['format'] : false));
+
                 $arNames = $this->fields->apartment;
 
                 $_apartment['squareCommon'] = base\Helper::setSeparator( $_apartment['squareCommon'], ',');
