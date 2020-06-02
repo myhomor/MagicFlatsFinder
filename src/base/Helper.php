@@ -122,9 +122,14 @@ class Helper extends BaseObject
     }
 
 
-    public function getFlatMixKey( $_apartment )
+    public function getFlatMixKey( $_apartment, $_numOrder_clear_zero=false )
     {
-        return $_apartment[ $this->_fields_apartment['building_id'] ] . '_' . $_apartment[ $this->_fields_apartment['section'] ] . '_' . $_apartment[ $this->_fields_apartment['floor'] ] . '_' . $_apartment[ $this->_fields_apartment['numOrder'] ];
+        if( $_numOrder_clear_zero )
+            $numOrder = (int) $_apartment[ $this->_fields_apartment['numOrder'] ];
+        else
+            $numOrder = $_apartment[ $this->_fields_apartment['numOrder'] ];
+
+        return $_apartment[ $this->_fields_apartment['building_id'] ] . '_' . $_apartment[ $this->_fields_apartment['section'] ] . '_' . $_apartment[ $this->_fields_apartment['floor'] ] . '_' . $numOrder;
     }
 
     public static function setSeparator( $value, $old_separator, $new_separator=false )

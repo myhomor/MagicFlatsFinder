@@ -61,8 +61,11 @@ class Filter extends SimpleClass
         $status = [];
         foreach ( $filter as $type => $list )
         {
-            if( $type === 'mixed_key' )
-                $_key = $this->helper->getFlatMixKey( $element );
+            if( $type === 'mixed_key' ) {
+                //$_key = $this->helper->getFlatMixKey($element);
+                $_key_mk['str'] = $this->helper->getFlatMixKey($element);
+                $_key_mk['int'] = $this->helper->getFlatMixKey($element, true);
+            }
 
             if( $type === 'id' )
                 $_key = $element[ $this->fields->apartment['id'] ];
@@ -70,7 +73,15 @@ class Filter extends SimpleClass
             if( $type === 'guid' )
                 $_key = $element[ $this->fields->apartment['guid'] ];
 
-            $_status = ( !in_array( $_key, $list ) ) ? 'N' : 'Y';
+            if( $type === 'mixed_key' ) {
+                $_status = ( !in_array($_key_mk['str'], $list) )
+                    ? ( ( !in_array( $_key_mk['int'], $list ) ) ? 'N' : 'Y' )
+                    : 'Y';
+
+                $_key = $_key_mk['int'];
+            }
+            else
+                $_status = ( !in_array( $_key, $list ) ) ? 'N' : 'Y';
 
             $this->debug['status_by']['mixed_key'][ $_key ] = $_status;
             $status[] = $_status;
