@@ -12,7 +12,7 @@ class SimpleClass extends BaseObject
 
         $this->helper = new Helper([
             'project' => $this->config['project'],
-            'map' => 'http://feeds.dev.kortros.ru'
+            'map' => 'https://feeds.kortros.ru'
         ]);
         $this->helper->_fields_apartment = $this->fields->apartment;
         $this->helper->_fields_building = $this->fields->building;
