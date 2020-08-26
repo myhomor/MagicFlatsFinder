@@ -14,7 +14,7 @@ class MapPlans extends SimpleClass
 
     public function init()
     {
-        if( isset( $this->config['elastic_search']) )
+        if( ElasticSearch::checkIssetCloudParams( $this->config['elastic_search'] ) )
         {
             $this->elastic_search = new ElasticSearch();
             $this->elastic_search->cloud(

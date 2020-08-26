@@ -15,6 +15,19 @@ class ElasticSearch extends \Elasticsearch\ClientBuilder
         return $this->client;
     }
 
+    public static function checkIssetCloudParams($params)
+    {
+        if( isset( $params ) || is_array($params) ) {
+            foreach (['cloudId', 'username', 'password'] as $key) {
+                if( !isset( $params[$key] ) || !$params[$key] || is_null($params[$key]) )
+                    return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+
     public static function getIndexName($project,$type)
     {
         return 'index_'.$project.'_'.$type;
