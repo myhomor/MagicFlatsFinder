@@ -11,8 +11,7 @@ class SimpleClass extends BaseObject
         $this->fields = new Fields( ( isset($this->config['fields_tmp']) ? $this->config['fields_tmp'] : [] ) );
 
         $this->helper = new Helper([
-            'project' => $this->config['project'],
-            'map' => 'https://feeds.kortros.ru'
+            'project' => $this->config['project']
         ]);
         $this->helper->_fields_apartment = $this->fields->apartment;
         $this->helper->_fields_building = $this->fields->building;

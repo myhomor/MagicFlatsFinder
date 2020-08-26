@@ -40,7 +40,8 @@ composer require orbit_exp/magic_flats_finder
         
     xml - ссылка на хмл фид **
     xml_type - флаг выборки из страой crm. работает только с проектом headliner. принимает одно значение hl
-    fields_tmp - шаблон нейминга для параметров а результирующем массиве 
+    map_link - ссылка на json карту изображений
+    fields_tmp - шаблон нейминга для полей в результирующем массиве 
     debug - true / false - флаг режима отладки, по умолчанию fasle
     
     full_xml_file - ссылка на полную xml выгрузку из crm. Файл или ссылка
@@ -50,6 +51,13 @@ composer require orbit_exp/magic_flats_finder
             //номер строения => building_id
             1 => 123
         ]
+    elastic_search - параметры для подключения к elastic search 
+    
+    elastic_search = [
+                username => login
+                password => 123
+                cloudId => Id облака, если испльльзуется облако,
+         ]
 ```
 
 ### Простой поиск
@@ -77,6 +85,7 @@ composer require orbit_exp/magic_flats_finder
     plans - параметры для планировок
     [
         format - png / jpg / svg
+        search - elastic ( тип карты изображений. Если параметр не задан, то по дефолту используется карта из параметра map_link )
     ]
     filter - параметры для фильтрации 
     discount - параметры для скидки

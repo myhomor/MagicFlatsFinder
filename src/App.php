@@ -36,6 +36,7 @@ class App extends base\SimpleClass
     private $houseStack = [];
     private $map_buildings;
     private $map_buildings_id;
+    private $map_plans = false;
 
     public function init()
     {
@@ -45,6 +46,11 @@ class App extends base\SimpleClass
         $this->filter = new base\Filter( $this->config );
         $this->parser = new base\Parser();
 
+        $this->map_plans = new base\MapPlans([
+            'project' => $this->config['project'],
+            'map_link' => $this->config['map_link'],
+            'elastic_search' => isset($this->config['elastic_search']) ? $this->config['elastic_search'] : false
+        ]);
 
         if( isset( $this->config['map_buildings'] ) ) {
             $this->map_buildings = [];
@@ -133,7 +139,6 @@ class App extends base\SimpleClass
                 $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl($this->config['xml'] . '?BuildingID=' . $house_id . '&deep=' . $this->deep ) );
         }
 
-
         if( !isset( $params['_noFlatsManager'] ) || $params['_noFlatsManager'] !== 'Y' )
             $this->sort = new base\Sort( $params['sort'] );
 
@@ -151,6 +156,9 @@ class App extends base\SimpleClass
     {
         $this->discount = new base\Discount( $params['discount'] );
 
+        if( $params['plans']['search'] === 'elastic' )
+            $this->map_plans->addMapPlansByHouse($house_id, (isset($params['plans']['format']) ? $params['plans']['format'] : false));
+
         foreach ($xml->developers->developer->projects->project->buildings->building as $building) {
             if ((int)$building->id !== $house_id) continue;
 
@@ -160,7 +168,7 @@ class App extends base\SimpleClass
             $arNames = $this->fields->building;
 
             $res['building'] = [
-                $arNames['price']               => [
+                $arNames['price']           => [
                         'max' => base\Helper::getValue( $_building['maxPrice'] ),
                         'min' => base\Helper::getValue( $_building['minPrice'] )
                     ],
@@ -235,10 +243,12 @@ class App extends base\SimpleClass
                         ? (int) $this->map_buildings_id[ $_apartment['building_id'] ]['queue']
                         : $this->queue );
 
-                $plan = $this->helper->getFlatPlan( $_apartment['guid'],
-                                                    (int)$building->id,
-                                                    $this->config['project'],
-                                                    (isset($params['plans']['format']) ? $params['plans']['format'] : false));
+                $plan = $this->map_plans->getFlatPlan(
+                    $_apartment['guid'],
+                    (int)$building->id,
+                    $this->config['project'],
+                    (isset($params['plans']['format']) ? $params['plans']['format'] : false)
+                );
 
                 $arNames = $this->fields->apartment;
 
@@ -337,7 +347,7 @@ class App extends base\SimpleClass
                 $_apartment['numInPlatform'] = $_apartment['info']['pl'];
 
 
-                $plan = $this->helper->getFlatPlan(
+                $plan = $this->map_plans->getFlatPlan(
                     $_apartment['guid'],
                     $this->map_buildings[ $_apartment['info']['house'] ]['building_id'],
                     $this->config['project'],
