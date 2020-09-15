@@ -252,7 +252,6 @@ class App extends base\SimpleClass
                 );
 
                 $arNames = $this->fields->apartment;
-
                 $_apartment['squareCommon'] = base\Helper::setSeparator( $_apartment['squareCommon'], ',');
                 $_apartment['cost'] = str_replace(',', '.', $_apartment['cost']);
                 $_apartment['squareMetrPrice'] = base\Helper::setSeparator( $_apartment['squareMetrPrice'], ',');
@@ -354,7 +353,7 @@ class App extends base\SimpleClass
                     $this->config['project'],
                     (isset($params['plans']['format']) ? $params['plans']['format'] : false));
 
-
+                $arNames = $this->fields->apartment;
                 $arApartment = [
                     //$arNames['id'] => $_apartment['id'],
                     $arNames['queue'] => $this->map_buildings[ $_apartment['info']['house'] ]['queue'],
@@ -481,6 +480,7 @@ class App extends base\SimpleClass
 
                 $arCell[ $arKeyCode[$i++] ] = $data;
             }
+
             $arRowAll[] = $arCell;
             $arCell = [];
         }
