@@ -19,6 +19,7 @@ class App extends base\SimpleClass
     const PROJECT_ILOVE = 'ilove';
     const PROJECT_BAUMANHAUSE = 'baumanhouse';
     const PROJECT_HLGULLIVER = 'hlgulliver';
+    const PROJECT_PERHUSHKOVO = 'perhushkovo';
 
     const DEF_XML_TYPE = 'crmweb';
 
