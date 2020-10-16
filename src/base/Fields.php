@@ -98,6 +98,7 @@ class Fields extends BaseObject
             'buildNumber' => 'buildNumber',
             "typeFinish" => 'type_finish',
             "oral_reserv" => 'oral_reserv',
+            "real_building_id" => 'real_building_id',
         ];
     }
 

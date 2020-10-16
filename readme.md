@@ -39,7 +39,6 @@ composer require orbit_exp/magic_flats_finder
         PROJECT_HLGULLIVER or hlgulliver
         
     xml - ссылка на хмл фид **
-    xml_type - флаг выборки из страой crm. работает только с проектом headliner. принимает одно значение hl
     map_link - ссылка на json карту изображений
     fields_tmp - шаблон нейминга для полей в результирующем массиве 
     debug - true / false - флаг режима отладки, по умолчанию fasle
@@ -50,6 +49,11 @@ composer require orbit_exp/magic_flats_finder
         1 =[
             //номер строения => building_id
             1 => 123
+        ]
+    map_merge_buildings - карта объединения нескольких сущностей корпусов в одну
+       //id главной сужности => массив зависимых сущностей
+        123 => [
+              654,
         ]
     elastic_search - параметры для подключения к elastic search 
     

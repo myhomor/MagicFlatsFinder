@@ -38,11 +38,12 @@ class App extends base\SimpleClass
     private $map_buildings;
     private $map_buildings_id;
     private $map_plans = false;
+    private $map_merge_buildings;
 
     public function init()
     {
-        if (isset($this->config['xml_type']))
-            $this->xml_type = $this->config['xml_type'];
+        /*if (isset($this->config['xml_type']))
+            $this->xml_type = $this->config['xml_type'];*/
 
         $this->filter = new base\Filter( $this->config );
         $this->parser = new base\Parser();
@@ -68,6 +69,17 @@ class App extends base\SimpleClass
                         'queue' => (int) $queue,
                         'house_id' => (int) $h
                     ];
+                }
+            }
+        }
+
+        if( isset( $this->config['map_merge_buildings'] ) )
+        {
+            $this->map_merge_buildings = [];
+            foreach ( $this->config['map_merge_buildings'] as $building_id => $arMergeBuilding_id )
+            {
+                foreach ($arMergeBuilding_id as $id) {
+                    $this->map_merge_buildings[$id] = $building_id;
                 }
             }
         }
@@ -133,11 +145,12 @@ class App extends base\SimpleClass
             $xml = new base\SimpleXmlExtended( $this->parser->loadXml( $params['xml_file'] )->asXml() );
         }
 
-        if( !$xml ){
-            if ( $this->config['project'] === self::PROJECT_HEADLINER && $this->xml_type !== self::DEF_XML_TYPE )
+        if( !$xml )
+        {
+           /* if ( $this->config['project'] === self::PROJECT_HEADLINER && $this->xml_type !== self::DEF_XML_TYPE )
                 $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl( $this->config['xml'] ) );
-            else
-                $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl($this->config['xml'] . '?BuildingID=' . $house_id . '&deep=' . $this->deep ) );
+            else*/
+            $xml = new base\SimpleXmlExtended( base\Parser::getXmlByUrl($this->config['xml'] . '?BuildingID=' . $house_id . '&deep=' . $this->deep ) );
         }
 
         if( !isset( $params['_noFlatsManager'] ) || $params['_noFlatsManager'] !== 'Y' )
@@ -261,7 +274,10 @@ class App extends base\SimpleClass
                     $arNames['id']              => base\Helper::getValue($_apartment['id']),
                     $arNames['queue']           => base\Helper::getValue($_apartment['queue']),
                     $arNames['guid']            => base\Helper::getValue($_apartment['guid']),
-                    $arNames['building_id']     => base\Helper::getValue($_apartment['building_id']),
+                    $arNames['building_id']     => ( isset($this->map_merge_buildings[ $_apartment['building_id'] ])
+                                                        ? (int) $this->map_merge_buildings[ $_apartment['building_id'] ]
+                                                        : base\Helper::getValue($_apartment['building_id']) ),
+                    $arNames['real_building_id']=> base\Helper::getValue($_apartment['building_id']),
                     $arNames['section']         => base\Helper::getValue($_apartment['section']),
                     $arNames['floor']           => base\Helper::getValue($_apartment['floor']),
                     $arNames['numOrder']        => base\Helper::getValue($_apartment['numOrder']),
@@ -346,6 +362,7 @@ class App extends base\SimpleClass
                 $_apartment['floor'] = $_apartment['info']['floor'];
                 $_apartment['numInPlatform'] = $_apartment['info']['pl'];
 
+                $building_id = $this->map_buildings[ $_apartment['info']['house'] ]['building_id'];
 
                 $plan = $this->map_plans->getFlatPlan(
                     $_apartment['guid'],
@@ -358,7 +375,12 @@ class App extends base\SimpleClass
                     //$arNames['id'] => $_apartment['id'],
                     $arNames['queue'] => $this->map_buildings[ $_apartment['info']['house'] ]['queue'],
                     $arNames['guid'] => $_apartment['guid'],
-                    $arNames['building_id'] => $this->map_buildings[ $_apartment['info']['house'] ]['building_id'],
+                    //$arNames['building_id'] => $this->map_buildings[ $_apartment['info']['house'] ]['building_id'],
+                    $arNames['building_id'] => ( isset($this->map_merge_buildings[ $building_id ])
+                        ? (int) $this->map_merge_buildings[ $building_id ]
+                        : (int) $building_id),
+                    $arNames['real_building_id']=> (int) $building_id,
+
                     $arNames['section'] => $_apartment['section'],
                     $arNames['floor'] => $_apartment['floor'],
                     $arNames['numOrder'] => $_apartment['info']['number'],
