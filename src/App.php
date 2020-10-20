@@ -78,8 +78,12 @@ class App extends base\SimpleClass
             $this->map_merge_buildings = [];
             foreach ( $this->config['map_merge_buildings'] as $building_id => $arMergeBuilding_id )
             {
-                foreach ($arMergeBuilding_id as $id) {
-                    $this->map_merge_buildings[$id] = $building_id;
+                foreach ($arMergeBuilding_id as $id)
+                {
+                    $this->map_merge_buildings[$id] = [
+                        'queue' => isset( $this->map_buildings_id[ $building_id ]['queue'] ) ? $this->map_buildings_id[ $building_id ]['queue'] : $this->queue,
+                        'building_id' => (int) $building_id
+                    ];
                 }
             }
         }
@@ -272,11 +276,17 @@ class App extends base\SimpleClass
 
                 $arApartment = [
                     $arNames['id']              => base\Helper::getValue($_apartment['id']),
-                    $arNames['queue']           => base\Helper::getValue($_apartment['queue']),
+
+                    $arNames['queue']           => ( isset($this->map_merge_buildings[ $_apartment['building_id'] ]['queue'])
+                                                        ? (int) $this->map_merge_buildings[ $_apartment['building_id'] ]['queue']
+                                                        : base\Helper::getValue($_apartment['queue']) ),
+
                     $arNames['guid']            => base\Helper::getValue($_apartment['guid']),
-                    $arNames['building_id']     => ( isset($this->map_merge_buildings[ $_apartment['building_id'] ])
-                                                        ? (int) $this->map_merge_buildings[ $_apartment['building_id'] ]
+
+                    $arNames['building_id']     => ( isset($this->map_merge_buildings[ $_apartment['building_id'] ]['building_id'])
+                                                        ? (int) $this->map_merge_buildings[ $_apartment['building_id'] ]['building_id']
                                                         : base\Helper::getValue($_apartment['building_id']) ),
+
                     $arNames['real_building_id']=> base\Helper::getValue($_apartment['building_id']),
                     $arNames['section']         => base\Helper::getValue($_apartment['section']),
                     $arNames['floor']           => base\Helper::getValue($_apartment['floor']),
@@ -373,12 +383,16 @@ class App extends base\SimpleClass
                 $arNames = $this->fields->apartment;
                 $arApartment = [
                     //$arNames['id'] => $_apartment['id'],
-                    $arNames['queue'] => $this->map_buildings[ $_apartment['info']['house'] ]['queue'],
+                    $arNames['queue'] => ( isset($this->map_merge_buildings[ $building_id ]['queue'])
+                        ? (int) $this->map_merge_buildings[ $building_id ]['queue']
+                        : $this->map_buildings[ $_apartment['info']['house'] ]['queue']),
+
                     $arNames['guid'] => $_apartment['guid'],
                     //$arNames['building_id'] => $this->map_buildings[ $_apartment['info']['house'] ]['building_id'],
-                    $arNames['building_id'] => ( isset($this->map_merge_buildings[ $building_id ])
-                        ? (int) $this->map_merge_buildings[ $building_id ]
+                    $arNames['building_id'] => ( isset($this->map_merge_buildings[ $building_id ]['building_id'])
+                        ? (int) $this->map_merge_buildings[ $building_id ]['building_id']
                         : (int) $building_id),
+
                     $arNames['real_building_id']=> (int) $building_id,
 
                     $arNames['section'] => $_apartment['section'],
