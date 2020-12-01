@@ -309,7 +309,7 @@ class App extends base\SimpleClass
                     if( !key_exists( base\Discount::PARAM_TOTAL_COST, $_apartment ) )
                         $_apartment[ base\Discount::PARAM_TOTAL_COST ] = $_apartment['cost'];
 
-                    if( $discount = $this->discount->setDiscount( $_apartment ) )
+                    if( $discount = $this->discount->setDiscount( $arApartment ) )
                         $arApartment['discount'] = $discount;
                 }
 
